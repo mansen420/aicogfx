@@ -26,6 +26,7 @@ target_include_directories(${BIN_NAME}
         ${CMAKE_SOURCE_DIR}/vendor/glm
         ${CMAKE_SOURCE_DIR}/vendor/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}  # for internal headers
+        ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
 )
 
 # Link dependencies
