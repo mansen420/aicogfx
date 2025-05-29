@@ -1,18 +1,17 @@
-#include <cstdio>
 #include <cstdlib>
 #include "window.h"
 
 int main()
 {
     using namespace aicogfx;
-    int status = create_window(600, 300, "TITLE");
+    if(init() == opres::FAILURE)
+        return EXIT_FAILURE;
     
-    if(status == STATUS_FAILURE)
-        return EXIT_FAILURE; //early return
+    //hand control to window context 
+    wndctx mainctx(600, 300, "Title");
 
-    while(!window_should_close())
-        process_shit();
+    //context terminated, terminate engine 
+    terminate();
 
-    destroy_window();
     return EXIT_SUCCESS;
 }

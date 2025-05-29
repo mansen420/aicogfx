@@ -3,42 +3,62 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-GLFWwindow* WND;
-int aicogfx::create_window(int width, int height, char* title)
+
+uint32_t aicogfx::engine_flags = 0;
+
+aicogfx::opres aicogfx::init()
 {
     if(!glfwInit())
-        return STATUS_FAILURE;
-
+        return opres::FAILURE;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    WND = glfwCreateWindow(width, height, title, nullptr, nullptr);
-    if(!WND)
-        return STATUS_FAILURE;
     
-    glfwMakeContextCurrent(WND); //make OpenGL context current FIRST
-    
-    if(gladLoadGL() == 0) // THEN load OpenGL functions!
-        return STATUS_FAILURE;
+    engine_flags = engine_flags | engine_flag_bits::INIT;
 
-    return STATUS_SUCCESS;
+    return opres::SUCCESS;
 }
 
-bool aicogfx::window_should_close()
+void aicogfx::terminate()
 {
-    return glfwWindowShouldClose(WND);
-}
-
-void aicogfx::process_shit()
-{
-    glClearColor(1.f, 0.2f, 0.3f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glfwSwapBuffers(WND);
-    glfwPollEvents();
-}
-void aicogfx::destroy_window()
-{
-    glfwDestroyWindow(WND);
     glfwTerminate();
 }
+
+struct aicogfx::wndctx::_impl
+{
+    _impl(int width, int height, char* title)
+    {  
+        winptr = glfwCreateWindow(width, height, title, nullptr, nullptr);
+
+        if(!winptr)
+            throw opres::FAILURE;
+
+        glfwMakeContextCurrent(winptr);
+
+        if(!gladLoadGL())
+        {
+            glfwDestroyWindow(winptr);
+            throw opres::FAILURE;
+        }
+    }
+    ~_impl()
+    {
+        glfwDestroyWindow(winptr);
+    }
+    void loop()
+    {
+        while(!glfwWindowShouldClose(winptr))
+        {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glfwSwapBuffers(winptr);
+            glfwPollEvents();
+        }
+    }
+private:
+    GLFWwindow* winptr;
+};
+
+aicogfx::wndctx::wndctx(int width, int height, char* title) : implptr(new _impl(width, height, title)){implptr->loop();}
+aicogfx::wndctx::~wndctx(){delete implptr;}
+aicogfx::wndctx::wndctx(wndctx&& other) : implptr(other.implptr){other.implptr = nullptr;}
