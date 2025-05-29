@@ -1,0 +1,20 @@
+in the include/window.h file
+
+1. what does extern do
+2. whats INIT = 1 << 0
+3. what are the "@" symbols for example, line 42 "@class" and line 43 "@brief" what is brief?
+4. honestly this entire structure i don't get, what is it doing? all i know is that structs have public by default opposed to the class' private default
+
+in the src/window.cpp file
+
+1. line 9 "aicogfx::opres aicogfx::init()", is "opres aicogfx" a namespace or are they two separate entities?
+2. why is everything in a struct? starting from line 27?
+3. lines 54,55: "glfwSwapBuffers" and "glfwPollEvents" i have no idea what they do
+4. line 62: what's the colon operator? in the middle of "wndctx([...])" and "implptr[...]" 
+
+note: [...] means that there are stuff there that i didn't bother writing.
+
+in the test/window_test.cpp file
+
+1. what is mainctx (this is the first time it has ever been mentioned i think maybe)
+
