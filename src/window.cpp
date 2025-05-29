@@ -26,7 +26,7 @@ void aicogfx::terminate()
 
 struct aicogfx::wndctx::_impl
 {
-    _impl(int width, int height, char* title)
+    _impl(int width, int height, const char* title)
     {  
         winptr = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
@@ -59,6 +59,6 @@ private:
     GLFWwindow* winptr;
 };
 
-aicogfx::wndctx::wndctx(int width, int height, char* title) : implptr(new _impl(width, height, title)){implptr->loop();}
+aicogfx::wndctx::wndctx(int width, int height, const char* title) : implptr(new _impl(width, height, title)){implptr->loop();}
 aicogfx::wndctx::~wndctx(){delete implptr;}
 aicogfx::wndctx::wndctx(wndctx&& other) : implptr(other.implptr){other.implptr = nullptr;}

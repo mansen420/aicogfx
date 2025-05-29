@@ -47,7 +47,7 @@ namespace aicogfx
      */
     struct wndctx
     {
-        wndctx(int width, int height, char* title);
+        wndctx(int width, int height, const char* title);
         wndctx(wndctx&&);
         wndctx(const wndctx&) = delete;
         wndctx& operator=(const wndctx&) = delete;
