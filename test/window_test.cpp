@@ -6,9 +6,6 @@
 int main()
 {
     using namespace aicogfx::sys;
-
-    if(init() == opres::FAILURE)
-        return EXIT_FAILURE;
     try
     {
         engctx engine_guard;//enforces correct destruction order 
@@ -17,10 +14,10 @@ int main()
     
         std::thread secondary_thread([&]()
             {
-                while (mainctx.looping())
-                {
-                    mainctx.interrupt();
-                }
+                while (!mainctx.looping())
+                    std::this_thread::yield();
+                sleep(2);
+                mainctx.interrupt();
             });
         
         //hand control to window context 
