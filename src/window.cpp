@@ -1,24 +1,26 @@
 #include "wndctx.h"
+#include "engctx.h"
+#include "sysinit.h"
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+
 #include <atomic>
 #include <cstddef>
 
+static uint32_t engine_flags = 0;
 
-uint32_t aicogfx::sys::engine_flags = 0;
-
-aicogfx::sys::engctx::engctx()
+aicogfx::engctx::engctx() : flags(engine_flags)
 {
-    if(auto status = init(); status != opres::SUCCESS)
+    if(auto status = sys::init(); status != opres::SUCCESS)
         throw status;
 }
-aicogfx::sys::engctx::~engctx()noexcept
+aicogfx::engctx::~engctx()noexcept
 {
-    terminate();
+    sys::terminate();
 }
 
-aicogfx::sys::opres aicogfx::sys::init()
+aicogfx::opres aicogfx::sys::init()
 {
     if(!glfwInit())
         return opres::FAILURE;
@@ -26,7 +28,7 @@ aicogfx::sys::opres aicogfx::sys::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
-    engine_flags = engine_flags | engine_flag_bits::INIT;
+    engine_flags = engine_flags | engctx::bits::INIT;
 
     return opres::SUCCESS;
 }
@@ -35,7 +37,6 @@ void aicogfx::sys::terminate() noexcept
 {
     glfwTerminate();
 }
-
 
 struct aicogfx::sys::wndctx::_impl
 {
