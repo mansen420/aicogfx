@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <thread>
 #include <unistd.h>
-#include "window.h"
+#include "wndctx.h"
 
 int main()
 {
