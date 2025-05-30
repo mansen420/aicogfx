@@ -2,11 +2,23 @@
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include <atomic>
+#include <cstddef>
 
 
-uint32_t aicogfx::engine_flags = 0;
+uint32_t aicogfx::sys::engine_flags = 0;
 
-aicogfx::opres aicogfx::init()
+aicogfx::sys::engctx::engctx()
+{
+    if(auto status = init(); status != opres::SUCCESS)
+        throw status;
+}
+aicogfx::sys::engctx::~engctx()noexcept
+{
+    terminate();
+}
+
+aicogfx::sys::opres aicogfx::sys::init()
 {
     if(!glfwInit())
         return opres::FAILURE;
@@ -19,15 +31,22 @@ aicogfx::opres aicogfx::init()
     return opres::SUCCESS;
 }
 
-void aicogfx::terminate()
+void aicogfx::sys::terminate() noexcept
 {
     glfwTerminate();
 }
 
-struct aicogfx::wndctx::_impl
+
+struct aicogfx::sys::wndctx::_impl
 {
-    _impl(int width, int height, const char* title)
-    {  
+    std::atomic<bool> kill_loop;
+    std::atomic<bool> looping;
+    _impl(int width, int height, const char* title) : kill_loop(false),
+    looping(false)
+    {
+        if(glfwGetCurrentContext() != NULL)//another context is already current on calling thread
+            throw opres::CONTEXT_CURRENT;
+
         winptr = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
         if(!winptr)
@@ -41,24 +60,37 @@ struct aicogfx::wndctx::_impl
             throw opres::FAILURE;
         }
     }
-    ~_impl()
-    {
-        glfwDestroyWindow(winptr);
-    }
+    int ctr = 0; //testing
+    int max = 50;
     void loop()
     {
-        while(!glfwWindowShouldClose(winptr))
+        kill_loop.store(false);
+        looping.store(true);
+        while(!(glfwWindowShouldClose(winptr) || kill_loop.load()))
         {
             glClear(GL_COLOR_BUFFER_BIT);
+
+            float factor = float(ctr)/max;
+            ++ctr %= max;
+            glClearColor(factor * 1.0f, 0.2f, 0.5f, 1.f);
 
             glfwSwapBuffers(winptr);
             glfwPollEvents();
         }
+        looping.store(false);
+    }
+    ~_impl()
+    {
+        glfwDestroyWindow(winptr);
     }
 private:
     GLFWwindow* winptr;
 };
 
-aicogfx::wndctx::wndctx(int width, int height, const char* title) : implptr(new _impl(width, height, title)){implptr->loop();}
-aicogfx::wndctx::~wndctx(){delete implptr;}
-aicogfx::wndctx::wndctx(wndctx&& other) : implptr(other.implptr){other.implptr = nullptr;}
+aicogfx::sys::wndctx::wndctx(int width, int height, const char* title) : implptr(new _impl(width, height, title)){}
+aicogfx::sys::wndctx::~wndctx()noexcept{delete implptr;}
+aicogfx::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
+
+void aicogfx::sys::wndctx::interrupt() noexcept{implptr->kill_loop.store(true);}
+void aicogfx::sys::wndctx::loop(){implptr->loop();}
+bool aicogfx::sys::wndctx::looping()const noexcept{return implptr->looping.load();}
