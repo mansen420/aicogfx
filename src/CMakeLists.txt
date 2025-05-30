@@ -34,4 +34,4 @@ target_include_directories(${BIN_NAME}
 
 # Link dependencies
 find_package(OpenGL REQUIRED)
-target_link_libraries(${BIN_NAME} PRIVATE glm::glm OpenGL::GL glfw)
+target_link_libraries(${BIN_NAME} PRIVATE glad glm::glm OpenGL::GL glfw)
