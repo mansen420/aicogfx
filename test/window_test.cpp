@@ -2,9 +2,12 @@
 #include <thread>
 #include <unistd.h>
 #include "wndctx.h"
+#include "engctx.h"
+#include "opres.h"
 
 int main()
 {
+    using namespace aicogfx;
     using namespace aicogfx::sys;
     try
     {
