@@ -11,21 +11,28 @@ namespace aicogfx::sys
      * system window context where rendering can happen.
      *
      * Note that only one context may be current per thread,
-     * i.e., you can only own one wndctx object per thread.
+     * i.e., you can only own one valid wndctx object per thread.
      * If a context is already current, 
      * then constructing this object will throw.
      */
     struct wndctx
     {
-        wndctx(int width, int height, const char* title);
+        struct frameinfo {};
+        typedef void(*render_callback)(const frameinfo&, void*);
+
+        wndctx(int width, int height, const char* title, 
+        render_callback fnc);
         wndctx(wndctx&&) noexcept;
         wndctx(const wndctx&) = delete;
         wndctx& operator=(const wndctx&) = delete;
         wndctx& operator=(wndctx&&) = delete;
         ~wndctx() noexcept;
         
+        void* stateptr = nullptr;
+        render_callback renderfnc = nullptr;
+
         /**
-         * @brief Returns whether the context is in-loop
+         * @brief Returns whether the context is in-loop. Thread safe.
          */
         bool looping()const noexcept;
         /**
@@ -33,6 +40,9 @@ namespace aicogfx::sys
          * Beware that this takes control of the program flow from the 
          * calling thread, until either the window is closed,
          * or wndctx::interrupt is called from an external thread.
+         * 
+         * This function will internally call wndctx::renderfnc, which
+         * *must* be a valid pointer.
          */
         void loop();
         /**
@@ -43,6 +53,7 @@ namespace aicogfx::sys
          */
         void interrupt() noexcept;
     private:
+        frameinfo _framedata;
         struct _impl;
         _impl* implptr = nullptr;
     };
