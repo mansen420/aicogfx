@@ -83,7 +83,8 @@ private:
 };
 
 aicogfx::sys::wndctx::wndctx(int width, int height, const char* title, 
-    render_callback fnc) : renderfnc(fnc), implptr(new _impl(width, height, title)){}
+    renderer_t renderer) : renderfnc(renderer.fnc), stateptr(renderer.stateptr),
+    implptr(new _impl(width, height, title)){}
 aicogfx::sys::wndctx::~wndctx()noexcept{delete implptr;}
 aicogfx::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
 

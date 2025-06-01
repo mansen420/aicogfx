@@ -5,6 +5,7 @@
 #pragma once
 namespace aicogfx::sys
 {
+    struct renderer_t;
     /**
      * @class wndctx
      * @brief RAII wrapper responsible for initializing and terminating a 
@@ -20,16 +21,15 @@ namespace aicogfx::sys
         struct frameinfo {};
         typedef void(*render_callback)(const frameinfo&, void*);
 
-        wndctx(int width, int height, const char* title, 
-        render_callback fnc);
+        wndctx(int width, int height, const char* title, renderer_t renderer);
         wndctx(wndctx&&) noexcept;
         wndctx(const wndctx&) = delete;
         wndctx& operator=(const wndctx&) = delete;
         wndctx& operator=(wndctx&&) = delete;
         ~wndctx() noexcept;
         
-        void* stateptr = nullptr;
         render_callback renderfnc = nullptr;
+        void* stateptr = nullptr;
 
         /**
          * @brief Returns whether the context is in-loop. Thread safe.
@@ -56,5 +56,10 @@ namespace aicogfx::sys
         frameinfo _framedata;
         struct _impl;
         _impl* implptr = nullptr;
+    };
+    struct renderer_t
+    {
+        const wndctx::render_callback fnc;
+        void* const stateptr;
     };
 }
