@@ -5,6 +5,7 @@
 #include "wndctx.h"
 #include "engctx.h"
 #include "opres.h"
+#include "renderers.h"
 
 int main()
 {
@@ -14,14 +15,14 @@ int main()
     {
         engctx engine_guard;//enforces correct destruction order 
 
-        wndctx mainctx(600, 300, "AAA");
+        wndctx mainctx(600, 300, "AAA", flashing_red);
         
         std::atomic<opres*> scdres{nullptr}; 
         std::thread scdthread([&scdres]()
                 {
                     try
                     {
-                        wndctx scdctx(300, 300, "BBB");
+                        wndctx scdctx(300, 300, "BBB", flashing_red);
                         scdres.store(new opres{opres::SUCCESS});
                         scdctx.loop();
                     }

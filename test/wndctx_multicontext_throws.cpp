@@ -5,6 +5,7 @@
 #include "wndctx.h"
 #include "engctx.h"
 #include "opres.h"
+#include "renderers.h"
 
 int main()
 {
@@ -14,9 +15,9 @@ int main()
     {
         engctx engine_guard;//enforces correct destruction order 
 
-        wndctx mainctx(600, 300, "AAA");
+        wndctx mainctx(600, 300, "AAA", flashing_red);
         
-        wndctx secondctx(300, 300, "BBB");
+        wndctx secondctx(300, 300, "BBB", flashing_red);
 
         mainctx.loop();
     }
