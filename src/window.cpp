@@ -61,19 +61,13 @@ struct aicogfx::sys::wndctx::_impl
             throw opres::FAILURE;
         }
     }
-    int ctr = 0; //testing
-    int max = 50;
-    void loop()
+    void loop(render_callback fnc, const frameinfo& framedata, void* usrdata)
     {
         kill_loop.store(false);
         looping.store(true);
         while(!(glfwWindowShouldClose(winptr) || kill_loop.load()))
         {
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            float factor = float(ctr)/max;
-            ++ctr %= max;
-            glClearColor(factor * 1.0f, 0.2f, 0.5f, 1.f);
+            fnc(framedata, usrdata);
 
             glfwSwapBuffers(winptr);
             glfwPollEvents();
@@ -88,10 +82,15 @@ private:
     GLFWwindow* winptr;
 };
 
-aicogfx::sys::wndctx::wndctx(int width, int height, const char* title) : implptr(new _impl(width, height, title)){}
+aicogfx::sys::wndctx::wndctx(int width, int height, const char* title, 
+    renderer_t renderer) : renderfnc(renderer.fnc), stateptr(renderer.stateptr),
+    implptr(new _impl(width, height, title)){}
 aicogfx::sys::wndctx::~wndctx()noexcept{delete implptr;}
 aicogfx::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
 
 void aicogfx::sys::wndctx::interrupt() noexcept{implptr->kill_loop.store(true);}
-void aicogfx::sys::wndctx::loop(){implptr->loop();}
+void aicogfx::sys::wndctx::loop()
+{
+    implptr->loop(renderfnc, _framedata, stateptr);
+}
 bool aicogfx::sys::wndctx::looping()const noexcept{return implptr->looping.load();}

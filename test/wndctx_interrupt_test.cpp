@@ -4,6 +4,7 @@
 #include "wndctx.h"
 #include "engctx.h"
 #include "opres.h"
+#include "renderers.h"
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
     {
         engctx engine_guard;//enforces correct destruction order 
 
-        wndctx mainctx(600, 300, "Title");
+        wndctx mainctx(600, 300, "Title", flashing_red);
     
         std::thread secondary_thread([&]()
             {
