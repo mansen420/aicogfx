@@ -7,7 +7,7 @@ struct flashing_red_data
     int max = 256;
 };
 flashing_red_data data_g;
-void flashing_red_fnc([[maybe_unused]] const aicogfx::sys::wndctx::frameinfo&
+void flashing_red_fnc([[maybe_unused]] const aico::sys::wndctx::frameinfo&
     framedata, void* stateptr)
 {
     flashing_red_data* data = (flashing_red_data*)stateptr;
@@ -19,5 +19,5 @@ void flashing_red_fnc([[maybe_unused]] const aicogfx::sys::wndctx::frameinfo&
 
     ++data->ctr %= data->max;
 }
-aicogfx::sys::renderer_t aicogfx::sys::flashing_red{.fnc=flashing_red_fnc,
+aico::sys::renderer_t aico::sys::flashing_red{.fnc=flashing_red_fnc,
     .stateptr = &data_g};

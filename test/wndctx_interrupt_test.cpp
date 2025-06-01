@@ -8,8 +8,8 @@
 
 int main()
 {
-    using namespace aicogfx;
-    using namespace aicogfx::sys;
+    using namespace aico;
+    using namespace aico::sys;
     try
     {
         engctx engine_guard;//enforces correct destruction order 

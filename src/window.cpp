@@ -10,17 +10,17 @@
 
 static uint32_t engine_flags = 0;
 
-aicogfx::engctx::engctx() : flags(engine_flags)
+aico::engctx::engctx() : flags(engine_flags)
 {
     if(auto status = sys::init(); status != opres::SUCCESS)
         throw status;
 }
-aicogfx::engctx::~engctx()noexcept
+aico::engctx::~engctx()noexcept
 {
     sys::terminate();
 }
 
-aicogfx::opres aicogfx::sys::init()
+aico::opres aico::sys::init()
 {
     if(!glfwInit())
         return opres::FAILURE;
@@ -33,12 +33,12 @@ aicogfx::opres aicogfx::sys::init()
     return opres::SUCCESS;
 }
 
-void aicogfx::sys::terminate() noexcept
+void aico::sys::terminate() noexcept
 {
     glfwTerminate();
 }
 
-struct aicogfx::sys::wndctx::_impl
+struct aico::sys::wndctx::_impl
 {
     std::atomic<bool> kill_loop;
     std::atomic<bool> looping;
@@ -82,15 +82,15 @@ private:
     GLFWwindow* winptr;
 };
 
-aicogfx::sys::wndctx::wndctx(int width, int height, const char* title, 
+aico::sys::wndctx::wndctx(int width, int height, const char* title, 
     renderer_t renderer) : renderfnc(renderer.fnc), stateptr(renderer.stateptr),
     implptr(new _impl(width, height, title)){}
-aicogfx::sys::wndctx::~wndctx()noexcept{delete implptr;}
-aicogfx::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
+aico::sys::wndctx::~wndctx()noexcept{delete implptr;}
+aico::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
 
-void aicogfx::sys::wndctx::interrupt() noexcept{implptr->kill_loop.store(true);}
-void aicogfx::sys::wndctx::loop()
+void aico::sys::wndctx::interrupt() noexcept{implptr->kill_loop.store(true);}
+void aico::sys::wndctx::loop()
 {
     implptr->loop(renderfnc, _framedata, stateptr);
 }
-bool aicogfx::sys::wndctx::looping()const noexcept{return implptr->looping.load();}
+bool aico::sys::wndctx::looping()const noexcept{return implptr->looping.load();}

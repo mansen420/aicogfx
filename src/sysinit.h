@@ -2,7 +2,7 @@
 
 #include "opres.h"
 
-namespace aicogfx::sys
+namespace aico::sys
 {
    /**
      * @brief Initializes the engine.

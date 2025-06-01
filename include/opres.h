@@ -2,7 +2,7 @@
 
 #include "stdint.h"
 
-namespace aicogfx
+namespace aico
 {
     enum class opres : uint32_t
     {

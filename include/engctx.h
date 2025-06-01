@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-namespace aicogfx
+namespace aico
 { 
     struct engctx
     {

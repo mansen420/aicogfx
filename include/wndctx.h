@@ -3,7 +3,7 @@
  * @brief 
  */
 #pragma once
-namespace aicogfx::sys
+namespace aico::sys
 {
     struct renderer_t;
     /**
