@@ -76,6 +76,8 @@ aico::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other
 
 aico::gfxctx* aico::sys::wndctx::makegfxctx(gfxconf_t conf, opres* res)const noexcept
 {
+    if(implptr->gfxctxptr != nullptr)
+        delete implptr->gfxctxptr; //safely destroy old ctx
     implptr->gfxctxptr = new gfxctx(conf);
     opres status = implptr->gfxctxptr->_init(_info);
     if(res != nullptr)
