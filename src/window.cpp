@@ -69,7 +69,9 @@ private:
 };
 
 aico::sys::wndctx::wndctx(int width, int height, const char* title, 
-    renderer_t renderer, uint32_t flags) : renderfnc(renderer.fnc), stateptr(renderer.stateptr),
+    renderer_t renderer, uint32_t flags) : 
+    renderfnc(renderer.fnc), stateptr(renderer.stateptr),
+    _info{width, height, title, flags},
     implptr(new _impl(width, height, title, flags)){}
 aico::sys::wndctx::~wndctx()noexcept{delete implptr;}
 aico::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
