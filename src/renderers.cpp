@@ -1,4 +1,5 @@
 #include "renderers.h"
+#include "gfxctx.h"
 #include "glad/glad.h"
 
 struct flashing_red_data
@@ -8,7 +9,7 @@ struct flashing_red_data
 };
 flashing_red_data data_g;
 void flashing_red_fnc([[maybe_unused]] const aico::sys::wndctx::frameinfo&
-    framedata, void* stateptr)
+    framedata, aico::gfxctx*, void* stateptr)
 {
     flashing_red_data* data = (flashing_red_data*)stateptr;
     
@@ -19,5 +20,5 @@ void flashing_red_fnc([[maybe_unused]] const aico::sys::wndctx::frameinfo&
 
     ++data->ctr %= data->max;
 }
-aico::sys::renderer_t aico::sys::flashing_red{.fnc=flashing_red_fnc,
+aico::sys::wndctx::renderer_t aico::sys::flashing_red{.fnc=flashing_red_fnc,
     .stateptr = &data_g};

@@ -8,7 +8,7 @@ namespace aico
         
         enum bits
         {
-            INIT = 1 << 0
+            INIT = 1 << 0,
         };
         
         const uint32_t& flags;

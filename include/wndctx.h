@@ -3,9 +3,14 @@
  * @brief 
  */
 #pragma once
+#include <cstdint>
+
+#include "opres.h"
+
+namespace aico{struct gfxctx; struct gfxconf_t;}
+
 namespace aico::sys
 {
-    struct renderer_t;
     /**
      * @class wndctx
      * @brief RAII wrapper responsible for initializing and terminating a 
@@ -18,10 +23,22 @@ namespace aico::sys
      */
     struct wndctx
     {
+        struct renderer_t;
+        /**
+         * @struct frameinfo
+         * @brief per-frame information, passed to the render function.
+         */
         struct frameinfo {};
-        typedef void(*render_callback)(const frameinfo&, void*);
+        /**
+         * @brief information about the window context, may change depending
+         * external events.
+         */
+        struct info{int width, height; const char* title; uint32_t flags;};
+        
+        typedef void(*render_callback)(const frameinfo&, gfxctx*, void*);
 
-        wndctx(int width, int height, const char* title, renderer_t renderer);
+        wndctx(int width, int height, const char* title, renderer_t renderer,
+        uint32_t flags = 0);
         wndctx(wndctx&&) noexcept;
         wndctx(const wndctx&) = delete;
         wndctx& operator=(const wndctx&) = delete;
@@ -30,6 +47,28 @@ namespace aico::sys
         
         render_callback renderfnc = nullptr;
         void* stateptr = nullptr;
+        
+        gfxctx* makegfxctx(gfxconf_t, opres* res)const noexcept;
+
+        enum bits
+        {
+            DEBUGCTX = 1 << 0,
+        };
+        
+        /**
+         * @brief implement later, should return boolean-like values of the
+         * context
+         *
+         * @return 
+         */
+        uint32_t getflags()const noexcept;
+
+        /**
+         * @brief 
+         *
+         * @return 
+         */
+        info getinfo()const noexcept;
 
         /**
          * @brief Returns whether the context is in-loop. Thread safe.
@@ -51,13 +90,14 @@ namespace aico::sys
          * Once interrupted, the loop will hand control back to the
          * calling thread, and may be called again.
          */
-        void interrupt() noexcept;
+        void interrupt() noexcept;       
     private:
+        info _info;
         frameinfo _framedata;
         struct _impl;
         _impl* implptr = nullptr;
     };
-    struct renderer_t
+    struct wndctx::renderer_t
     {
         const wndctx::render_callback fnc;
         void* const stateptr;

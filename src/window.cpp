@@ -1,52 +1,26 @@
+#include "opres.h"
 #include "wndctx.h"
-#include "engctx.h"
-#include "sysinit.h"
+#include "gfxctx.h"
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
 #include <atomic>
 #include <cstddef>
-
-static uint32_t engine_flags = 0;
-
-aico::engctx::engctx() : flags(engine_flags)
-{
-    if(auto status = sys::init(); status != opres::SUCCESS)
-        throw status;
-}
-aico::engctx::~engctx()noexcept
-{
-    sys::terminate();
-}
-
-aico::opres aico::sys::init()
-{
-    if(!glfwInit())
-        return opres::FAILURE;
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
-    engine_flags = engine_flags | engctx::bits::INIT;
-
-    return opres::SUCCESS;
-}
-
-void aico::sys::terminate() noexcept
-{
-    glfwTerminate();
-}
+#include <cstdint>
 
 struct aico::sys::wndctx::_impl
 {
     std::atomic<bool> kill_loop;
     std::atomic<bool> looping;
-    _impl(int width, int height, const char* title) : kill_loop(false),
+    _impl(int width, int height, const char* title, uint32_t flags) : kill_loop(false),
     looping(false)
     {
         if(glfwGetCurrentContext() != NULL)//another context is already current on calling thread
             throw opres::CONTEXT_CURRENT;
+        
+        if(flags & bits::DEBUGCTX)
+            glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
         winptr = glfwCreateWindow(width, height, title, nullptr, nullptr);
 
@@ -60,6 +34,15 @@ struct aico::sys::wndctx::_impl
             glfwDestroyWindow(winptr);
             throw opres::FAILURE;
         }
+
+        //validate ctx
+        if(flags & bits::DEBUGCTX)
+        {
+            GLint GLflags;
+            glGetIntegerv(GL_CONTEXT_FLAGS, &GLflags);
+            if(!(GLflags & GL_CONTEXT_FLAG_DEBUG_BIT))
+                throw opres::FAILURE;
+        }
     }
     void loop(render_callback fnc, const frameinfo& framedata, void* usrdata)
     {
@@ -67,7 +50,7 @@ struct aico::sys::wndctx::_impl
         looping.store(true);
         while(!(glfwWindowShouldClose(winptr) || kill_loop.load()))
         {
-            fnc(framedata, usrdata);
+            fnc(framedata, gfxctxptr, usrdata);
 
             glfwSwapBuffers(winptr);
             glfwPollEvents();
@@ -76,18 +59,29 @@ struct aico::sys::wndctx::_impl
     }
     ~_impl()
     {
+        if(gfxctxptr != nullptr)
+            delete gfxctxptr;
         glfwDestroyWindow(winptr);
     }
+    gfxctx* gfxctxptr = nullptr;
 private:
     GLFWwindow* winptr;
 };
 
 aico::sys::wndctx::wndctx(int width, int height, const char* title, 
-    renderer_t renderer) : renderfnc(renderer.fnc), stateptr(renderer.stateptr),
-    implptr(new _impl(width, height, title)){}
+    renderer_t renderer, uint32_t flags) : renderfnc(renderer.fnc), stateptr(renderer.stateptr),
+    implptr(new _impl(width, height, title, flags)){}
 aico::sys::wndctx::~wndctx()noexcept{delete implptr;}
 aico::sys::wndctx::wndctx(wndctx&& other)noexcept : implptr(other.implptr){other.implptr = nullptr;}
 
+aico::gfxctx* aico::sys::wndctx::makegfxctx(gfxconf_t conf, opres* res)const noexcept
+{
+    implptr->gfxctxptr = new gfxctx(conf);
+    opres status = implptr->gfxctxptr->_init(_info);
+    if(res != nullptr)
+        *res = status;
+    return implptr->gfxctxptr;
+}
 void aico::sys::wndctx::interrupt() noexcept{implptr->kill_loop.store(true);}
 void aico::sys::wndctx::loop()
 {
