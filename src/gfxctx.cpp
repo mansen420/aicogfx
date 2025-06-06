@@ -59,7 +59,7 @@ void APIENTRY aico::gfxctx::_impl::GLdebugproc([[maybe_unused]]GLenum source, GL
     
     //TODO perhaps it would be better to store this externally, avoid init cost
     std::ostringstream oss;
-    oss << "GL DEBUG: [" << severity_str << "][" << type_str << "]: " << 
+    oss << "GL DEBUG: [" << severity_str << "][" << type_str << "]\n" << 
         message << "\n";
     ctxptr->logerr(oss.str().c_str());
 
