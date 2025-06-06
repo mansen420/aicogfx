@@ -8,9 +8,10 @@
 aico::gfxctx::gfxctx(gfxconf_t config) : implptr(new _impl(config))
 {};
 aico::gfxctx::_impl::_impl(gfxconf_t config) : config(config) {}
-aico::gfxctx::~gfxctx(){delete implptr;}
-aico::opres aico::gfxctx::_init(const sys::wndctx::info& info)
+aico::gfxctx::~gfxctx()noexcept{delete implptr;}
+aico::opres aico::gfxctx::_init(const sys::wndctx::info& info)noexcept
 {return implptr->init(info);}
+aico::gfxctx::_impl* aico::gfxctx::getimpl()const noexcept{return implptr;}
 
 void aico::gfxctx::_impl::logerr(const char* msg)
 {
@@ -21,8 +22,8 @@ void aico::gfxctx::_impl::loginf(const char* msg)
     config.inflog << msg;
 }
 
-void set_debug_callback(GLDEBUGPROC debugfn, void* usrparam);
-aico::opres aico::gfxctx::_impl::init(const sys::wndctx::info& wndinfo)
+void set_debug_callback(GLDEBUGPROC debugfn, void* usrparam)noexcept;
+aico::opres aico::gfxctx::_impl::init(const sys::wndctx::info& wndinfo)noexcept
 {
     if(wndinfo.flags & sys::wndctx::bits::DEBUGCTX)
     {
@@ -54,7 +55,7 @@ void APIENTRY aico::gfxctx::_impl::GLdebugproc([[maybe_unused]]GLenum source, GL
         severity == GL_DEBUG_SEVERITY_LOW ? "LOW" : "NOTIFICATION";
     
     //TODO configure this so that it uses errlog and inflog appropriately
-    aico::gfxctx::_impl* ctxptr = (aico::gfxctx::_impl*) userParam;
+    auto ctxptr = (aico::gfxctx::_impl*) userParam;
     
     //TODO perhaps it would be better to store this externally, avoid init cost
     std::ostringstream oss;
@@ -69,7 +70,7 @@ void APIENTRY aico::gfxctx::_impl::GLdebugproc([[maybe_unused]]GLenum source, GL
     }
 }
 
-void set_debug_callback(GLDEBUGPROC debugfn, void* usrparam)
+void set_debug_callback(GLDEBUGPROC debugfn, void* usrparam)noexcept
 {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
