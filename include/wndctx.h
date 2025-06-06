@@ -36,6 +36,8 @@ namespace aico::sys
         struct info{int width, height; const char* title; uint32_t flags;};
         
         typedef void(*render_callback)(const frameinfo&, gfxctx*, void*);
+        typedef opres(*render_init)(gfxctx*, void*&);
+        typedef void(*render_term)(gfxctx*, void*);
 
         wndctx(int width, int height, const char* title, renderer_t renderer,
         uint32_t flags = 0);
@@ -45,8 +47,11 @@ namespace aico::sys
         wndctx& operator=(wndctx&&) = delete;
         ~wndctx() noexcept;
         
-        render_callback renderfnc = nullptr;
-        void* stateptr = nullptr;
+        render_callback renderfnc;
+        render_init render_initfnc;
+        render_term render_termfnc;
+
+        void* stateptr;
         
         gfxctx* makegfxctx(gfxconf_t, opres* res)const noexcept;
 
@@ -99,7 +104,9 @@ namespace aico::sys
     };
     struct wndctx::renderer_t
     {
-        const wndctx::render_callback fnc;
-        void* const stateptr;
+        const wndctx::render_callback fnc = nullptr;
+        const wndctx::render_init initfnc = nullptr;
+        const wndctx::render_term termfnc = nullptr;
+        void* stateptr = nullptr;
     };
 }

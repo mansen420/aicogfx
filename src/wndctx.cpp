@@ -50,7 +50,8 @@ struct aico::sys::wndctx::_impl
         looping.store(true);
         while(!(glfwWindowShouldClose(winptr) || kill_loop.load()))
         {
-            fnc(framedata, gfxctxptr, usrdata);
+            if(fnc != nullptr)
+                fnc(framedata, gfxctxptr, usrdata);
 
             glfwSwapBuffers(winptr);
             glfwPollEvents();
@@ -70,9 +71,13 @@ private:
 
 aico::sys::wndctx::wndctx(int width, int height, const char* title, 
 renderer_t renderer, uint32_t flags) : 
-renderfnc(renderer.fnc), stateptr(renderer.stateptr),
-_info{width, height, title, flags},
-implptr(new _impl(width, height, title, flags)){}
+    renderfnc(renderer.fnc), 
+    render_initfnc(renderer.initfnc),
+    render_termfnc(renderer.termfnc),
+    stateptr(renderer.stateptr),
+    _info{width, height, title, flags},
+    implptr(new _impl(width, height, title, flags))
+{}
 
 aico::sys::wndctx::~wndctx()noexcept{delete implptr;}
 
@@ -92,6 +97,14 @@ aico::gfxctx* aico::sys::wndctx::makegfxctx(gfxconf_t conf, opres* res)const noe
 void aico::sys::wndctx::interrupt() noexcept{implptr->kill_loop.store(true);}
 void aico::sys::wndctx::loop()
 {
+    if(render_initfnc != nullptr)
+    {
+        auto res = render_initfnc(implptr->gfxctxptr, stateptr);
+        if(res == opres::FAILURE)
+            return;
+    }
     implptr->loop(renderfnc, _framedata, stateptr);
+    if(render_termfnc != nullptr)
+        render_termfnc(implptr->gfxctxptr, stateptr);
 }
 bool aico::sys::wndctx::looping()const noexcept{return implptr->looping.load();}
