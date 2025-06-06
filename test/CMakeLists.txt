@@ -17,12 +17,6 @@ foreach(TEST_FILE ${TEST_SRC})
     # Link to your engine library
     target_link_libraries(${TEST_NAME} PRIVATE aicogfx)
 
-    # Include engine headers
-    target_include_directories(${TEST_NAME}
-        PRIVATE
-            ${CMAKE_SOURCE_DIR}/include
-    )
-
     # Set output directory
     set_target_properties(${TEST_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests
