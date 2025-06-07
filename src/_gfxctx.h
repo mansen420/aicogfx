@@ -6,6 +6,11 @@
 
 namespace aico
 {
+    struct gfxctx::buf::handle_t
+    {
+        GLuint value;
+        operator GLuint*(){return &value;}
+    };
     struct gfxctx::_impl
     {
         _impl(gfxconf_t);

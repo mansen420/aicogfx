@@ -2,8 +2,33 @@
 #include "_gfxctx.h"
 
 #include "glad/glad.h"
+#include "opres.h"
 #include "wndctx.h"
+
 #include <sstream>
+
+aico::gfxctx::buf::buf(aico::gfxctx::bufinfo info): _info(info), hnd(new handle_t){}
+aico::gfxctx::buf aico::gfxctx::bufalloc(bufinfo info, const void* data)const noexcept
+{
+    //if something failed, let the driver scream, i guess
+    buf buffer(info);
+    glCreateBuffers(1, *buffer.hnd);
+    glNamedBufferStorage(buffer.hnd->value, buffer._info.size, data,
+        GL_DYNAMIC_STORAGE_BIT);
+    return buffer;
+}
+void aico::gfxctx::freebuf(buf& buffer)const noexcept 
+{
+    glDeleteBuffers(1, *buffer.hnd);
+}
+aico::opres aico::gfxctx::bufdata(const buf& buffer, const void* data, size_t size,
+    size_t buf_offset)const noexcept
+{
+    if(buf_offset + size > buffer._info.size)
+        return opres::FAILURE;
+    glNamedBufferSubData(buffer.hnd->value, buf_offset, size, data);
+    return opres::SUCCESS;
+}
 
 aico::gfxctx::gfxctx(gfxconf_t config) : implptr(new _impl(config))
 {};
