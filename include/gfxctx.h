@@ -28,22 +28,23 @@ namespace aico
             size_t size;
             size_t stride;
         };
-        struct buf
+        struct buf_t
         {
             bufinfo info();
             friend struct gfxctx;
         private:
             bufinfo _info;
 
-            buf(const bufinfo);
+            buf_t(const bufinfo);
 
             struct handle_t;
             handle_t* hnd;
         };
 
-        [[nodiscard]]buf bufalloc(bufinfo, const void*)const noexcept;
-        void freebuf(buf&)const noexcept;
-        opres bufdata(const buf&, const void* data, size_t size, size_t buf_offset)const noexcept;
+        [[nodiscard]]buf_t bufalloc(bufinfo, const void*)const noexcept;
+        void freebuf(buf_t&)const noexcept;
+        opres bufdata(const buf_t&, const void* data, size_t size, size_t buf_offset)
+            const noexcept;
 
     private:
         gfxctx(gfxconf_t);

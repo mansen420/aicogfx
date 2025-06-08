@@ -7,21 +7,21 @@
 
 #include <sstream>
 
-aico::gfxctx::buf::buf(aico::gfxctx::bufinfo info): _info(info), hnd(new handle_t){}
-aico::gfxctx::buf aico::gfxctx::bufalloc(bufinfo info, const void* data)const noexcept
+aico::gfxctx::buf_t::buf_t(aico::gfxctx::bufinfo info): _info(info), hnd(new handle_t){}
+aico::gfxctx::buf_t aico::gfxctx::bufalloc(bufinfo info, const void* data)const noexcept
 {
     //if something failed, let the driver scream, i guess
-    buf buffer(info);
+    buf_t buffer(info);
     glCreateBuffers(1, *buffer.hnd);
     glNamedBufferStorage(buffer.hnd->value, buffer._info.size, data,
         GL_DYNAMIC_STORAGE_BIT);
     return buffer;
 }
-void aico::gfxctx::freebuf(buf& buffer)const noexcept 
+void aico::gfxctx::freebuf(buf_t& buffer)const noexcept 
 {
     glDeleteBuffers(1, *buffer.hnd);
 }
-aico::opres aico::gfxctx::bufdata(const buf& buffer, const void* data, size_t size,
+aico::opres aico::gfxctx::bufdata(const buf_t& buffer, const void* data, size_t size,
     size_t buf_offset)const noexcept
 {
     if(buf_offset + size > buffer._info.size)
