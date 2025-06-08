@@ -25,19 +25,26 @@ const char* const frgshd =
     "}\n";
 struct triangle_data
 {
-    GLuint VAO, VBO, EBO, VTX, FRG, PROG;
-    triangle_data()noexcept
+    GLuint VAO, EBO, VTX, FRG, PROG;
+    aico::gfxctx::buf_t* vtxbuf;
+    aico::gfxctx* gpu;
+    triangle_data(aico::gfxctx* gpu)noexcept : gpu(gpu)
     {
         glCreateVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
+        float vertices[]
+        {
+            0.f, 0.5f, -0.5f, 0.f, 0.5f, 0.f
+        };
+
+        vtxbuf = new aico::gfxctx::buf_t(gpu->bufalloc({.size=sizeof(vertices), 
+                .stride=2*sizeof(float)}, vertices));
+        if(!vtxbuf)
+            std::cout << "Uh oh..\n";
         
-        
-        glCreateBuffers(1, &VBO);
-        glNamedBufferData(VBO, sizeof(vertices), &vertices[0],
-            GL_STATIC_DRAW);
-        
-        glVertexArrayVertexBuffer(VAO, 0, VBO, 0,
-            2 * sizeof(float));
+        glVertexArrayVertexBuffer(VAO, 0, 
+            gpu->getimpl()->gethndl(*vtxbuf).value, 0, 
+                2 * sizeof(float));
         glEnableVertexArrayAttrib(VAO, 0);
         glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT,
             GL_FALSE, 0);
@@ -71,13 +78,14 @@ struct triangle_data
     ~triangle_data()noexcept
     {
         glDeleteProgram(PROG);
-        glDeleteBuffers(1, &VBO);
+        gpu->freebuf(*vtxbuf);
+        delete vtxbuf;
         glDeleteVertexArrays(1, &VAO);
     }
 };
-aico::opres triangle_init(aico::gfxctx*, void*& state)
+aico::opres triangle_init(aico::gfxctx* gpu, void*& state)
 {
-    state = new triangle_data();
+    state = new triangle_data(gpu);
     return aico::opres::SUCCESS;
 }
 void triangle_term(aico::gfxctx*, void* state)
@@ -89,8 +97,10 @@ void triangle_fn([[maybe_unused]] const aico::sys::wndctx::frameinfo&,
     aico::gfxctx* gfxctxptr, void* stateptr)
 {
     auto gfx = gfxctxptr->getimpl();
-
     auto state = (triangle_data*)(stateptr);
+    
+    glClear(GL_COLOR_BUFFER_BIT);
+
     glUseProgram(state->PROG);
     glBindVertexArray(state->VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
