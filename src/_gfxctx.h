@@ -19,6 +19,9 @@ namespace aico
         
         gfxconf_t config;
         
+        buf_t::handle_t gethndl(const buf_t&)const noexcept;
+
+
         void logerr(const char* message);
         void loginf(const char* message);
 

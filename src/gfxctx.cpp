@@ -30,6 +30,9 @@ aico::opres aico::gfxctx::bufdata(const buf_t& buffer, const void* data, size_t 
     return opres::SUCCESS;
 }
 
+aico::gfxctx::buf_t::handle_t aico::gfxctx::_impl::gethndl(const aico::gfxctx::buf_t&
+    buf)const noexcept{return *buf.hnd;}
+
 aico::gfxctx::gfxctx(gfxconf_t config) : implptr(new _impl(config))
 {};
 aico::gfxctx::_impl::_impl(gfxconf_t config) : config(config) {}
