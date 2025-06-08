@@ -6,8 +6,8 @@
 int main()
 {
     aico::engctx engine;
-    
-    aico::sys::wndctx mainctx(600, 300, "App", aico::sys::triangle);
+
+    aico::sys::wndctx mainctx(600, 300, "App", aico::sys::triangle, aico::sys::wndctx::DEBUGCTX);
     
     auto gfx = mainctx.makegfxctx({}, nullptr);
     
