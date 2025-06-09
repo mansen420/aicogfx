@@ -7,51 +7,100 @@
 
 #include <sstream>
 
-aico::gfxctx::buf_t::buf_t(aico::gfxctx::bufinfo info): _info(info), hnd(new handle_t){}
-aico::gfxctx::buf_t aico::gfxctx::bufalloc(bufinfo info, const void* data)const noexcept
+using namespace aico;
+using ctx = gfxctx;
+
+ctx::vtxlayout_t::vtxlayout_t(ctx::vtxlayout_info info): _info(info), _hnd(new handle_t)
+{}
+ctx::vtxlayout_t ctx::make_vtxlayout(vtxlayout_info info)const noexcept
+{
+    vtxlayout_t layout(info);
+    glCreateVertexArrays(1, &layout._hnd->value);
+    return layout;
+}
+opres ctx::bind(vtxlayout_t& layout)const noexcept
+{
+    auto vaobj = _impl::gethndl(layout);
+    glBindVertexArray(vaobj);
+    for(const auto& bind : layout._info.buffers)
+    {
+        glVertexArrayVertexBuffer(vaobj, bind.idx, 
+            _impl::gethndl(bind.buffer), bind.offset,
+                (int)bind.buffer._info.stride);
+    }
+    for(const auto& attrib : layout._info.attribs)
+    {
+        glEnableVertexArrayAttrib(vaobj, attrib.idx);
+        glVertexArrayAttribFormat(vaobj, attrib.idx, (int)attrib.size,
+            _impl::gl(attrib.T), GL_FALSE,
+                attrib.reloffst);
+        glVertexArrayAttribBinding(vaobj, attrib.idx, 
+            attrib.bindidx);
+    }
+    if(const auto& buf_fmt = layout._info.indexbuf_fmt; buf_fmt.has_value())
+    {
+        glVertexArrayElementBuffer(vaobj, _impl::gethndl(buf_fmt->first));
+    }
+    return opres::SUCCESS;
+}
+void ctx::free(vtxlayout_t& layout)const noexcept
+{
+    if(!layout._hnd)
+        return;
+    glDeleteVertexArrays(1, &layout._hnd->value);
+    delete layout._hnd;
+    layout._hnd = nullptr;
+}
+
+ctx::buf_t::buf_t(ctx::bufinfo info): _info(info), _hnd(new handle_t){}
+ctx::buf_t ctx::bufalloc(bufinfo info, const void* data)const noexcept
 {
     //if something failed, let the driver scream, i guess
     buf_t buffer(info);
-    glCreateBuffers(1, *buffer.hnd);
-    glNamedBufferStorage(buffer.hnd->value, buffer._info.size, data,
+    glCreateBuffers(1, &buffer._hnd->value);
+    glNamedBufferStorage(buffer._hnd->value, (long)buffer._info.size, data,
         GL_DYNAMIC_STORAGE_BIT);
     return buffer;
 }
-void aico::gfxctx::freebuf(buf_t& buffer)const noexcept 
+void ctx::free(buf_t& buffer)const noexcept 
 {
-    glDeleteBuffers(1, *buffer.hnd);
+    if(!buffer._hnd)
+        return;
+    glDeleteBuffers(1, &buffer._hnd->value);
+    delete buffer._hnd;
+    buffer._hnd = nullptr;
 }
-aico::opres aico::gfxctx::bufdata(const buf_t& buffer, const void* data, size_t size,
+opres ctx::bufdata(const buf_t& buffer, const void* data, size_t size,
     size_t buf_offset)const noexcept
 {
     if(buf_offset + size > buffer._info.size)
         return opres::FAILURE;
-    glNamedBufferSubData(buffer.hnd->value, buf_offset, size, data);
+    glNamedBufferSubData(buffer._hnd->value, buf_offset, size, data);
     return opres::SUCCESS;
 }
 
-aico::gfxctx::buf_t::handle_t aico::gfxctx::_impl::gethndl(const aico::gfxctx::buf_t&
-    buf)const noexcept{return *buf.hnd;}
+GLuint ctx::_impl::gethndl(const ctx::buf_t&x)noexcept{return x._hnd->value;}
+GLuint ctx::_impl::gethndl(const ctx::vtxlayout_t&x)noexcept
+{return x._hnd->value;}
 
-aico::gfxctx::gfxctx(gfxconf_t config) : implptr(new _impl(config))
-{};
-aico::gfxctx::_impl::_impl(gfxconf_t config) : config(config) {}
-aico::gfxctx::~gfxctx()noexcept{delete implptr;}
-aico::opres aico::gfxctx::_init(const sys::wndctx::info& info)noexcept
+ctx::gfxctx(gfxconf_t config) : implptr(new _impl(config)){}
+ctx::_impl::_impl(gfxconf_t config) : config(config) {}
+ctx::~gfxctx()noexcept{delete implptr;}
+opres ctx::_init(const sys::wndctx::info& info)noexcept
 {return implptr->init(info);}
-aico::gfxctx::_impl* aico::gfxctx::getimpl()const noexcept{return implptr;}
+ctx::_impl* ctx::getimpl()const noexcept{return implptr;}
 
-void aico::gfxctx::_impl::logerr(const char* msg)
+void ctx::_impl::logerr(const char* msg)
 {
     config.errlog << msg;
 }
-void aico::gfxctx::_impl::loginf(const char* msg)
+void ctx::_impl::loginf(const char* msg)
 {
     config.inflog << msg;
 }
 
 void set_debug_callback(GLDEBUGPROC debugfn, void* usrparam)noexcept;
-aico::opres aico::gfxctx::_impl::init(const sys::wndctx::info& wndinfo)noexcept
+opres ctx::_impl::init(const sys::wndctx::info& wndinfo)noexcept
 {
     if(wndinfo.flags & sys::wndctx::bits::DEBUGCTX)
     {
@@ -64,7 +113,7 @@ aico::opres aico::gfxctx::_impl::init(const sys::wndctx::info& wndinfo)noexcept
     return opres::SUCCESS;
 }
 
-void APIENTRY aico::gfxctx::_impl::GLdebugproc([[maybe_unused]]GLenum source, GLenum type,
+void APIENTRY ctx::_impl::GLdebugproc([[maybe_unused]]GLenum source, GLenum type,
     [[maybe_unused]]GLuint id,
     GLenum severity, [[maybe_unused]]GLsizei length,
     const GLchar* message, [[maybe_unused]]const void* userParam)
@@ -83,7 +132,7 @@ void APIENTRY aico::gfxctx::_impl::GLdebugproc([[maybe_unused]]GLenum source, GL
         severity == GL_DEBUG_SEVERITY_LOW ? "LOW" : "NOTIFICATION";
     
     //TODO configure this so that it uses errlog and inflog appropriately
-    auto ctxptr = (aico::gfxctx::_impl*) userParam;
+    auto ctxptr = (ctx::_impl*) userParam;
     
     //TODO perhaps it would be better to store this externally, avoid init cost
     std::ostringstream oss;

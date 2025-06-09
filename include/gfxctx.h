@@ -3,8 +3,11 @@
 #include "opres.h"
 #include "wndctx.h"
 
+#include <cstdint>
 #include <iostream>
 #include <ostream>
+#include <vector>
+#include <optional>
 
 namespace aico
 {
@@ -23,6 +26,7 @@ namespace aico
         gfxctx(gfxctx&&) noexcept;
         ~gfxctx() noexcept;
         
+        /*BUFFER*/
         struct bufinfo
         {
             size_t size;
@@ -31,20 +35,62 @@ namespace aico
         struct buf_t
         {
             bufinfo info();
-            friend struct gfxctx;
+            ~buf_t()=default;
         private:
-            bufinfo _info;
+            friend struct gfxctx;
 
+            bufinfo _info;
             buf_t(const bufinfo);
 
             struct handle_t;
-            handle_t* hnd;
+            handle_t* _hnd;
         };
-
         [[nodiscard]]buf_t bufalloc(bufinfo, const void*)const noexcept;
-        void freebuf(buf_t&)const noexcept;
+        void free(buf_t&)const noexcept;
         opres bufdata(const buf_t&, const void* data, size_t size, size_t buf_offset)
             const noexcept;
+        
+        /*VTX LAYOUT*/
+        struct bindinfo
+        {
+            buf_t buffer;
+            unsigned int idx, offset = 0;
+        };
+        struct attribinfo
+        {
+            unsigned int idx, size, reloffst, bindidx;
+            enum class type : uint8_t
+            {
+                FLOAT, HALF_FLT, DOUBLE_FLT
+            };
+            type T;
+        };
+        struct vtxlayout_info
+        {
+            std::vector<bindinfo> buffers;
+            std::vector<attribinfo> attribs;
+            enum class indexfmt : uint8_t
+            {
+                U8, U16, U32
+            };
+            std::optional<std::pair<buf_t, indexfmt>> indexbuf_fmt;
+        };
+        struct vtxlayout_t
+        {
+            vtxlayout_info info();
+            ~vtxlayout_t()=default;
+        private:
+            friend struct gfxctx;
+
+            vtxlayout_info _info;
+            vtxlayout_t(vtxlayout_info);
+
+            struct handle_t;
+            handle_t* _hnd;
+        };
+        [[nodiscard]]vtxlayout_t make_vtxlayout(vtxlayout_info)const noexcept;
+        opres bind(vtxlayout_t&)const noexcept;
+        void free(vtxlayout_t&)const noexcept;
 
     private:
         gfxctx(gfxconf_t);
