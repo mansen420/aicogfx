@@ -43,7 +43,7 @@ struct triangle_data
             std::cout << "Uh oh..\n";
         
         glVertexArrayVertexBuffer(VAO, 0, 
-            gpu->getimpl()->gethndl(*vtxbuf).value, 0, 
+            gpu->getimpl()->gethndl(*vtxbuf), 0, 
                 2 * sizeof(float));
         glEnableVertexArrayAttrib(VAO, 0);
         glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT,
