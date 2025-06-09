@@ -78,7 +78,7 @@ struct triangle_data
     ~triangle_data()noexcept
     {
         glDeleteProgram(PROG);
-        gpu->freebuf(*vtxbuf);
+        gpu->free(*vtxbuf);
         delete vtxbuf;
         glDeleteVertexArrays(1, &VAO);
     }
