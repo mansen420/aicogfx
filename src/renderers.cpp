@@ -25,13 +25,12 @@ const char* const frgshd =
     "}\n";
 struct triangle_data
 {
-    GLuint VAO, EBO, VTX, FRG, PROG;
-    aico::gfxctx::buf_t* vtxbuf;
+    GLuint VTX, FRG, PROG;
+    aico::gfxctx::buf_t* vtxbuf = nullptr;
+    aico::gfxctx::vtxlayout_t* binding = nullptr;
     aico::gfxctx* gpu;
-    triangle_data(aico::gfxctx* gpu)noexcept : gpu(gpu)
+    triangle_data(aico::gfxctx* gpu)noexcept: gpu(gpu)
     {
-        glCreateVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
         float vertices[]
         {
             0.f, 0.5f, -0.5f, 0.f, 0.5f, 0.f
@@ -41,14 +40,18 @@ struct triangle_data
                 .stride=2*sizeof(float)}, vertices));
         if(!vtxbuf)
             std::cout << "Uh oh..\n";
-        
-        glVertexArrayVertexBuffer(VAO, 0, 
-            gpu->getimpl()->gethndl(*vtxbuf), 0, 
-                2 * sizeof(float));
-        glEnableVertexArrayAttrib(VAO, 0);
-        glVertexArrayAttribFormat(VAO, 0, 2, GL_FLOAT,
-            GL_FALSE, 0);
-        glVertexArrayAttribBinding(VAO, 0, 0);
+
+        using attrib = aico::gfxctx::attribinfo;
+        using bind = aico::gfxctx::bindinfo;
+        binding = new aico::gfxctx::vtxlayout_t(gpu->make_vtxlayout(
+                    {
+                        .buffers{bind{*vtxbuf, 0, 0}},
+                        .attribs{attrib{0, 2, 0, 0,
+                            attrib::type::FLOAT}}
+                    }));
+        if(!binding)
+            std::cout << "Uh oh..\n";
+        gpu->bind(*binding);
 
         VTX = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(VTX, 1, &vtxshd, nullptr);
@@ -79,8 +82,9 @@ struct triangle_data
     {
         glDeleteProgram(PROG);
         gpu->free(*vtxbuf);
+        gpu->free(*binding);
+        delete binding;
         delete vtxbuf;
-        glDeleteVertexArrays(1, &VAO);
     }
 };
 aico::opres triangle_init(aico::gfxctx* gpu, void*& state)
@@ -96,13 +100,12 @@ void triangle_term(aico::gfxctx*, void* state)
 void triangle_fn([[maybe_unused]] const aico::sys::wndctx::frameinfo&,
     aico::gfxctx* gfxctxptr, void* stateptr)
 {
-    auto gfx = gfxctxptr->getimpl();
+    auto gpu = gfxctxptr->getimpl();
     auto state = (triangle_data*)(stateptr);
     
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(state->PROG);
-    glBindVertexArray(state->VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 

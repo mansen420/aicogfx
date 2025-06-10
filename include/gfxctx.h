@@ -73,7 +73,7 @@ namespace aico
             {
                 U8, U16, U32
             };
-            std::optional<std::pair<buf_t, indexfmt>> indexbuf_fmt;
+            std::optional<std::pair<buf_t, indexfmt>> indexbuf_fmt = std::nullopt;
         };
         struct vtxlayout_t
         {
@@ -100,6 +100,6 @@ namespace aico
         struct _impl;
         _impl* implptr;
     public:
-        [[nodiscard]]_impl* getimpl()const noexcept;
+        [[nodiscard]]_impl* getimpl()noexcept;
     };
 }

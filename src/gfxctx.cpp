@@ -16,12 +16,7 @@ ctx::vtxlayout_t ctx::make_vtxlayout(vtxlayout_info info)const noexcept
 {
     vtxlayout_t layout(info);
     glCreateVertexArrays(1, &layout._hnd->value);
-    return layout;
-}
-opres ctx::bind(vtxlayout_t& layout)const noexcept
-{
     auto vaobj = _impl::gethndl(layout);
-    glBindVertexArray(vaobj);
     for(const auto& bind : layout._info.buffers)
     {
         glVertexArrayVertexBuffer(vaobj, bind.idx, 
@@ -38,9 +33,12 @@ opres ctx::bind(vtxlayout_t& layout)const noexcept
             attrib.bindidx);
     }
     if(const auto& buf_fmt = layout._info.indexbuf_fmt; buf_fmt.has_value())
-    {
         glVertexArrayElementBuffer(vaobj, _impl::gethndl(buf_fmt->first));
-    }
+    return layout;
+}
+opres ctx::bind(const vtxlayout_t& layout)const noexcept
+{
+    glBindVertexArray(layout._hnd->value);
     return opres::SUCCESS;
 }
 void ctx::free(vtxlayout_t& layout)const noexcept
