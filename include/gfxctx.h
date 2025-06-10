@@ -8,6 +8,7 @@
 #include <ostream>
 #include <vector>
 #include <optional>
+#include <string>
 
 namespace aico
 {
@@ -89,9 +90,41 @@ namespace aico
             handle_t* _hnd;
         };
         [[nodiscard]]vtxlayout_t make_vtxlayout(vtxlayout_info)const noexcept;
-        opres bind(vtxlayout_t&)const noexcept;
+        opres bind(const vtxlayout_t&)const noexcept;
         void free(vtxlayout_t&)const noexcept;
+        
+        /*PROGRAM*/
+        struct stageinfo
+        {
+            std::string source;
+            enum class type: uint8_t
+            {
+                VERT, FRAG, TESC, TESE, GEOM, COMP
+            };
+            type T;
+        };
+        struct stage_t
+        {
+            stageinfo::type type()const noexcept;
+        private:
+            stage_t(stageinfo);
+            stageinfo::type _type;
 
+            struct handle_t;
+            handle_t* _hnd;
+        };
+        [[nodiscard]]stage_t compile(const stageinfo&, opres*)const noexcept;
+        void free(stage_t&)const noexcept;
+        struct program_t
+        {
+        private:
+            program_t();
+            struct handle_t;
+            handle_t* _hnd;
+        };
+        [[nodiscard]]program_t link(const std::vector<stage_t>&, opres*)const noexcept;
+        opres bind(program_t)const noexcept;
+        void free(program_t&)const noexcept;
     private:
         gfxctx(gfxconf_t);
 
