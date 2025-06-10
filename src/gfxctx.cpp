@@ -86,7 +86,7 @@ ctx::_impl::_impl(gfxconf_t config) : config(config) {}
 ctx::~gfxctx()noexcept{delete implptr;}
 opres ctx::_init(const sys::wndctx::info& info)noexcept
 {return implptr->init(info);}
-ctx::_impl* ctx::getimpl()const noexcept{return implptr;}
+ctx::_impl* ctx::getimpl()noexcept{return implptr;}
 
 void ctx::_impl::logerr(const char* msg)
 {
