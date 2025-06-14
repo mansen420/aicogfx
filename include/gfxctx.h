@@ -8,7 +8,6 @@
 #include <ostream>
 #include <vector>
 #include <optional>
-#include <string>
 
 namespace aico
 {
@@ -52,6 +51,7 @@ namespace aico
             const noexcept;
         
         /*VTX LAYOUT*/
+
         struct bindinfo
         {
             buf_t buffer;
@@ -68,12 +68,31 @@ namespace aico
         };
         struct vtxlayout_info
         {
+            /**
+             * @brief An arrray of buffers to be bound to vertex attributes.
+             */
             std::vector<bindinfo> buffers;
+            /**
+             * @brief An array of attribute descriptions.
+             */
             std::vector<attribinfo> attribs;
+            /**
+             * @brief Type of index buffer indices. U8 is an unsigned 8 bit integer, etc.
+             */
             enum class indexfmt : uint8_t
             {
                 U8, U16, U32
             };
+            /**
+             * @brief An optional index buffer. 
+             *
+             * @detail The index buffer is used to order vertex attribute information.
+             * i.e., rather than vertex attribute X getting the data at buffer index X, vertex attribute X may index
+             * the buffer data arbitrarily.
+             * The index buffer is such that index X tells which index vertex X will get its data from.
+             * 
+             * The indexfmt object tells the type of the index buffer indices.
+             */
             std::optional<std::pair<buf_t, indexfmt>> indexbuf_fmt = std::nullopt;
         };
         struct vtxlayout_t
@@ -90,17 +109,30 @@ namespace aico
             handle_t* _hnd;
         };
         [[nodiscard]]vtxlayout_t make_vtxlayout(vtxlayout_info)const noexcept;
+        /**
+         * @brief 
+         *
+         * @note expensive operation.
+         *
+         * @return 
+         */
         opres bind(const vtxlayout_t&)const noexcept;
         void free(vtxlayout_t&)const noexcept;
         
         /*PROGRAM*/
         struct stageinfo
         {
-            std::string source;
+            /**
+             * @brief Null terminated C string
+             */
+            const char* source;
             enum class type: uint8_t
             {
                 VERT, FRAG, TESC, TESE, GEOM, COMP
             };
+            /**
+             * @brief Type of shader stage. Valid types are in stageinfo::type.
+             */
             type T;
         };
         struct stage_t
