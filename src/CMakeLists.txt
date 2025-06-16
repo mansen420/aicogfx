@@ -2,12 +2,15 @@
 file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+    "${CMAKE_SOURCE_DIR}/include/*.h"
 )
 
 set(BIN_NAME aicogfx)
 
 # Define the engine library
-add_library(${BIN_NAME} STATIC ${ENGINE_SRC})
+add_library(${BIN_NAME} STATIC)
+target_sources(aicogfx PRIVATE ${ENGINE_SRC})
 
 # Enable warnings
 if (MSVC)
@@ -31,4 +34,4 @@ target_include_directories(${BIN_NAME}
 
 # Link dependencies
 find_package(OpenGL REQUIRED)
-target_link_libraries(${BIN_NAME} PRIVATE glm::glm OpenGL::GL glfw)
+target_link_libraries(${BIN_NAME} PRIVATE glad glm::glm OpenGL::GL glfw)

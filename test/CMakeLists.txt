@@ -3,26 +3,19 @@ file(GLOB TEST_SRC CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
 )
-
+file(GLOB TEST_INCLUDES CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/include/*.h"
+)
 # Loop through all test source files
 foreach(TEST_FILE ${TEST_SRC})
     # Extract filename without extension
     get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
 
     # Create a test executable
-    add_executable(${TEST_NAME} ${TEST_FILE})
+    add_executable(${TEST_NAME} ${TEST_FILE} ${TEST_INCLUDES})
 
     # Link to your engine library
-    target_link_libraries(${TEST_NAME}
-        PRIVATE
-            ${BIN_NAME}
-    )
-
-    # Include engine headers
-    target_include_directories(${TEST_NAME}
-        PRIVATE
-            ${CMAKE_SOURCE_DIR}/include
-    )
+    target_link_libraries(${TEST_NAME} PRIVATE aicogfx)
 
     # Set output directory
     set_target_properties(${TEST_NAME} PROPERTIES
