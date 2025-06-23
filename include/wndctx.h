@@ -9,6 +9,26 @@
 
 namespace aico{struct gfxctx; struct gfxconf_t;}
 
+namespace aico
+{
+   struct starterparter{
+        starterparter();        
+
+        enum bits
+        {
+            INIT = 1 << 0,
+        };
+        
+        const uint32_t&flags;
+
+        ~starterparter()noexcept;
+
+    private:
+        struct _impl;
+        _impl* implptr;
+    };
+}
+
 namespace aico::sys
 {
     /**
@@ -23,6 +43,7 @@ namespace aico::sys
      */
     struct wndctx
     {
+
         struct renderer_t;
         /**
          * @struct frameinfo

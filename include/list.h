@@ -366,7 +366,7 @@ public:
     friend list<D, DYNAMIC> join(const std::initializer_list<types>&...lists);
     
     //TODO add static and dynamic dimension version of this
-    //Also, this does a copy, not a move. Add require clase for D convertible to T
+    //Also, this does a copy, not a move. Add require clause for D convertible to T
     template<typename D>
     operator list<D, dim>const()
     {
@@ -448,7 +448,7 @@ public:
         stream << "}";
     }
 
-    /// @warning For memory efficency, this destructor is not virtual. 
+    /// @warning For m*emory efficency, this destructor is not virtual. 
     /// As such, you should never use a list* to delete a derived type.
     /// I.e. the following code snippet is illegal, where 'derived' is a type extending this class
     ///

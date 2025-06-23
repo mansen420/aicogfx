@@ -1,4 +1,3 @@
-#include "engctx.h"
 #include "opres.h"
 #include "wndctx.h"
 #include "gfxctx.h"
@@ -8,7 +7,7 @@
 
 int main()
 {
-    aico::engctx engine;
+    aico::starterparter engine;
 
     aico::sys::wndctx mainctx(600, 300, "App", aico::sys::flashing_red, aico::sys::wndctx::DEBUGCTX);
     

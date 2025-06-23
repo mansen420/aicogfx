@@ -1,7 +1,6 @@
 #include "sysinit.h"
-#include "_engctx.h"
-#include "engctx.h"
-
+#include "_wndctx.h"
+#include "wndctx.h"
 #include "GLFW/glfw3.h"
 
 aico::opres aico::sys::init()
@@ -12,7 +11,7 @@ aico::opres aico::sys::init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
-    engflags = engflags | engctx::bits::INIT;
+    start_flags = start_flags | starterparter::bits::INIT;
 
     return opres::SUCCESS;
 }

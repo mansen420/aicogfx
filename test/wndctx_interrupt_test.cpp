@@ -2,7 +2,6 @@
 #include <thread>
 #include <unistd.h>
 #include "wndctx.h"
-#include "engctx.h"
 #include "opres.h"
 #include "renderers.h"
 
@@ -12,7 +11,7 @@ int main()
     using namespace aico::sys;
     try
     {
-        engctx engine_guard;//enforces correct destruction order 
+        starterparter engine_guard;//enforces correct destruction order 
 
         wndctx mainctx(600, 300, "Title", flashing_red);
     

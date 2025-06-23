@@ -1,4 +1,6 @@
 #include "opres.h"
+#include "_wndctx.h" //am i supposed to include the internal header here?
+#include "sysinit.h" //idk man
 #include "wndctx.h"
 #include "gfxctx.h"
 
@@ -8,6 +10,14 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+
+uint32_t aico::start_flags = 0; //clearly idk what i'm doing
+
+aico::starterparter::starterparter() : flags(start_flags)
+{
+    if(auto status = sys::init(); status != opres::SUCCESS)
+        throw status;
+}
 
 struct aico::sys::wndctx::_impl
 {
@@ -58,6 +68,7 @@ struct aico::sys::wndctx::_impl
         }
         looping.store(false);
     }
+
     ~_impl()
     {
         if(gfxctxptr != nullptr)
@@ -108,3 +119,8 @@ void aico::sys::wndctx::loop()
         render_termfnc(implptr->gfxctxptr, stateptr);
 }
 bool aico::sys::wndctx::looping()const noexcept{return implptr->looping.load();}
+
+aico::starterparter::~starterparter()noexcept
+{
+    sys::terminate();
+}
