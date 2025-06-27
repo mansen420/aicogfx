@@ -1,20 +1,31 @@
 #pragma once
 
+
 #include "gfxctx.h"
 
 #include "glad/glad.h"
 
 namespace aico
 {
-    struct gfxctx::buf_t::handle_t
+    using ctx = gfxctx;
+
+    struct ctx::buf_t::handle_t
     {
         GLuint value;
     };
-    struct gfxctx::vtxlayout_t::handle_t
+    struct ctx::vtxlayout_t::handle_t
     {
         GLuint value;
     };
-    struct gfxctx::_impl
+    struct ctx::shader_t::handle_t
+    {
+        GLuint value;
+    };
+    struct ctx::program_t::handle_t
+    {
+        GLuint value;
+    };
+    struct ctx::_impl
     {
         _impl(gfxconf_t);
 
@@ -22,9 +33,16 @@ namespace aico
         
         gfxconf_t config;
         
-        static GLuint gethndl(const buf_t&)noexcept;
-        static GLuint gethndl(const vtxlayout_t&)noexcept;
-        
+        static GLuint& hndl(buf_t&)noexcept;
+        static GLuint& hndl(vtxlayout_t&)noexcept;
+        static GLuint& hndl(shader_t&)noexcept;
+        static GLuint& hndl(program_t&)noexcept;
+
+        static const GLuint& hndl(const buf_t&)noexcept;
+        static const GLuint& hndl(const vtxlayout_t&)noexcept;
+        static const GLuint& hndl(const shader_t&)noexcept;
+        static const GLuint& hndl(const program_t&)noexcept;
+
         static constexpr GLenum gl(attribinfo::type t)noexcept
         {
             using type = attribinfo::type;
@@ -45,7 +63,19 @@ namespace aico
                 case(fmt::U32): return   GL_UNSIGNED_INT;
             }
         }
-
+        static constexpr GLenum gl(stageinfo::type t)noexcept
+        {
+            using T = stageinfo::type;
+            switch (t) 
+            {
+                case(T::COMP): return GL_COMPUTE_SHADER;
+                case(T::FRAG): return GL_FRAGMENT_SHADER;
+                case(T::GEOM): return GL_GEOMETRY_SHADER;
+                case(T::TESC): return GL_TESS_CONTROL_SHADER;
+                case(T::TESE): return GL_TESS_EVALUATION_SHADER;
+                case(T::VERT): return GL_VERTEX_SHADER;
+            }
+        }
 
         void logerr(const char* message);
         void loginf(const char* message);

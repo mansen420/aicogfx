@@ -46,11 +46,12 @@ namespace aico
             struct handle_t;
             handle_t* _hnd;
         };
-        [[nodiscard]]buf_t bufalloc(bufinfo, const void*)const noexcept;
-        void free(buf_t&)const noexcept;
+        [[nodiscard]]buf_t bufalloc(bufinfo, const void* =nullptr, opres* =nullptr)
+            const noexcept;
         opres bufdata(const buf_t&, const void* data, size_t size, size_t buf_offset)
             const noexcept;
-        
+        void free(buf_t&)const noexcept;
+
         /*VTX LAYOUT*/
         struct bindinfo
         {
@@ -96,35 +97,42 @@ namespace aico
         /*PROGRAM*/
         struct stageinfo
         {
-            std::string source;
+            const char* src; //GLSL
             enum class type: uint8_t
             {
                 VERT, FRAG, TESC, TESE, GEOM, COMP
             };
             type T;
+            int length = -1; //-1 indicates null-terminated string
         };
-        struct stage_t
+        struct shader_t
         {
             stageinfo::type type()const noexcept;
         private:
-            stage_t(stageinfo);
+            friend struct gfxctx;
+            shader_t(stageinfo);
+
             stageinfo::type _type;
 
             struct handle_t;
             handle_t* _hnd;
         };
-        [[nodiscard]]stage_t compile(const stageinfo&, opres*)const noexcept;
-        void free(stage_t&)const noexcept;
         struct program_t
         {
         private:
+            friend struct gfxctx;
             program_t();
             struct handle_t;
             handle_t* _hnd;
         };
-        [[nodiscard]]program_t link(const std::vector<stage_t>&, opres*)const noexcept;
+        [[nodiscard]]shader_t compile(stageinfo, opres* =nullptr)const noexcept;
+        [[nodiscard]]program_t link(const std::vector<shader_t>&, opres* =nullptr)const 
+            noexcept;
+        //TODO this is an illusion, there is no global state, make user
+        //pass in own renderpass state explicitly, vulkan-style
         opres bind(program_t)const noexcept;
         void free(program_t&)const noexcept;
+        void free(shader_t&)const noexcept;
     private:
         gfxctx(gfxconf_t);
 

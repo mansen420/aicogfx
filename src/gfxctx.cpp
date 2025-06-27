@@ -5,22 +5,116 @@
 #include "opres.h"
 #include "wndctx.h"
 
+#include <cassert>
 #include <sstream>
+#include <cstring>
 
 using namespace aico;
 using ctx = gfxctx;
 
-ctx::vtxlayout_t::vtxlayout_t(ctx::vtxlayout_info info): _info(info), _hnd(new handle_t)
-{}
+const GLuint& ctx::_impl::hndl(const ctx::buf_t&x)noexcept{return x._hnd->value;}
+const GLuint& ctx::_impl::hndl(const ctx::vtxlayout_t&x)noexcept{return x._hnd->value;}
+const GLuint& ctx::_impl::hndl(const ctx::shader_t&x)noexcept{return x._hnd->value;}
+const GLuint& ctx::_impl::hndl(const ctx::program_t&x)noexcept{return x._hnd->value;}
+
+GLuint& ctx::_impl::hndl(ctx::buf_t&x)noexcept{return x._hnd->value;}
+GLuint& ctx::_impl::hndl(ctx::vtxlayout_t&x)noexcept{return x._hnd->value;}
+GLuint& ctx::_impl::hndl(ctx::shader_t&x)noexcept{return x._hnd->value;}
+GLuint& ctx::_impl::hndl(ctx::program_t&x)noexcept{return x._hnd->value;}
+
+
+ctx::shader_t::shader_t(ctx::stageinfo info): _type(info.T), _hnd(new handle_t){}
+ctx::shader_t ctx::compile(ctx::stageinfo info, opres* res)const noexcept
+{
+    int length = info.length == -1? (int)strlen(info.src) : info.length;
+    assert(length > 0);
+
+    shader_t stg(info);
+    if(!stg._hnd)
+    {
+        if(res)
+            *res = opres::FAILURE; //alloc failure
+        return stg;
+    }
+    _impl::hndl(stg) = glCreateShader(_impl::gl(stg._type));
+    if(_impl::hndl(stg) == 0)
+    {
+        if(res)
+            *res = opres::FAILURE; //GL error
+        return stg;
+    }
+    glShaderSource(_impl::hndl(stg), 1, &info.src, 
+        info.length == -1 ? nullptr : &info.length);
+    glCompileShader(_impl::hndl(stg));
+    GLint status;
+    glGetShaderiv(_impl::hndl(stg), GL_COMPILE_STATUS,
+        &status);
+    if(status == GL_FALSE)
+    {
+        if(res)
+            *res = opres::FAILURE; //compilation failure
+        return stg;
+    }
+    return stg;
+}
+void ctx::free(shader_t& stg)const noexcept
+{
+    if(!stg._hnd)
+        return;
+    glDeleteShader(_impl::hndl(stg));
+    delete stg._hnd;
+    stg._hnd=nullptr;
+}
+ctx::program_t::program_t(): _hnd(new handle_t){}
+ctx::program_t ctx::link(const std::vector<shader_t>& stages, opres* res)const noexcept
+{
+    program_t prog;
+    if(!_impl::hndl(prog))
+    {
+        if(res)
+            *res = opres::FAILURE;//alloc failure
+        return prog;
+    }
+    _impl::hndl(prog)=glCreateProgram();
+    for(const auto& stage : stages)
+        glAttachShader(_impl::hndl(prog), _impl::hndl(stage));
+    glLinkProgram(_impl::hndl(prog));
+    GLint status;
+    glGetProgramiv(_impl::hndl(prog), GL_LINK_STATUS,
+        &status);
+    if(status==GL_FALSE)
+    {
+        if(res)
+            *res=opres::FAILURE;//link error
+        return prog;
+    }
+    return prog;
+}
+void ctx::free(program_t& prog)const noexcept
+{
+    if(!prog._hnd)
+        return;
+    glDeleteProgram(_impl::hndl(prog));
+    delete prog._hnd;
+    prog._hnd=nullptr;
+}
+opres ctx::bind(program_t prog)const noexcept
+{
+    //HACK: just assume prog is valid for now
+    glUseProgram(_impl::hndl(prog));
+    return opres::SUCCESS;
+}
+
+ctx::vtxlayout_t::vtxlayout_t(ctx::vtxlayout_info info): _info(info), _hnd(new handle_t){}
 ctx::vtxlayout_t ctx::make_vtxlayout(vtxlayout_info info)const noexcept
 {
     vtxlayout_t layout(info);
     glCreateVertexArrays(1, &layout._hnd->value);
-    auto vaobj = _impl::gethndl(layout);
+    auto vaobj = _impl::hndl(layout);
     for(const auto& bind : layout._info.buffers)
     {
         glVertexArrayVertexBuffer(vaobj, bind.idx, 
-            _impl::gethndl(bind.buffer), bind.offset,
+            _impl::hndl(bind.buffer), bind.offset,
                 (int)bind.buffer._info.stride);
     }
     for(const auto& attrib : layout._info.attribs)
@@ -33,7 +127,7 @@ ctx::vtxlayout_t ctx::make_vtxlayout(vtxlayout_info info)const noexcept
             attrib.bindidx);
     }
     if(const auto& buf_fmt = layout._info.indexbuf_fmt; buf_fmt.has_value())
-        glVertexArrayElementBuffer(vaobj, _impl::gethndl(buf_fmt->first));
+        glVertexArrayElementBuffer(vaobj, _impl::hndl(buf_fmt->first));
     return layout;
 }
 opres ctx::bind(const vtxlayout_t& layout)const noexcept
@@ -51,9 +145,10 @@ void ctx::free(vtxlayout_t& layout)const noexcept
 }
 
 ctx::buf_t::buf_t(ctx::bufinfo info): _info(info), _hnd(new handle_t){}
-ctx::buf_t ctx::bufalloc(bufinfo info, const void* data)const noexcept
+ctx::buf_t ctx::bufalloc(bufinfo info, const void* data, opres* res)const noexcept
 {
     //if something failed, let the driver scream, i guess
+    //TODO return error states via res
     buf_t buffer(info);
     glCreateBuffers(1, &buffer._hnd->value);
     glNamedBufferStorage(buffer._hnd->value, (long)buffer._info.size, data,
@@ -64,7 +159,7 @@ void ctx::free(buf_t& buffer)const noexcept
 {
     if(!buffer._hnd)
         return;
-    glDeleteBuffers(1, &buffer._hnd->value);
+    glDeleteBuffers(1, &_impl::hndl(buffer));
     delete buffer._hnd;
     buffer._hnd = nullptr;
 }
@@ -77,15 +172,10 @@ opres ctx::bufdata(const buf_t& buffer, const void* data, size_t size,
     return opres::SUCCESS;
 }
 
-GLuint ctx::_impl::gethndl(const ctx::buf_t&x)noexcept{return x._hnd->value;}
-GLuint ctx::_impl::gethndl(const ctx::vtxlayout_t&x)noexcept
-{return x._hnd->value;}
-
 ctx::gfxctx(gfxconf_t config) : implptr(new _impl(config)){}
 ctx::_impl::_impl(gfxconf_t config) : config(config) {}
 ctx::~gfxctx()noexcept{delete implptr;}
-opres ctx::_init(const sys::wndctx::info& info)noexcept
-{return implptr->init(info);}
+opres ctx::_init(const sys::wndctx::info& info)noexcept{return implptr->init(info);}
 ctx::_impl* ctx::getimpl()noexcept{return implptr;}
 
 void ctx::_impl::logerr(const char* msg)
