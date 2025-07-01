@@ -4,7 +4,7 @@
 int main()
 {
     using namespace aico;
-    typedef vector<float, 2, true> vec2f;
+    typedef storage<float, 2> vec2f;
     
     vec2f x;
     x.at<0>() = 1.f;
