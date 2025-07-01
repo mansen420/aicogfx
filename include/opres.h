@@ -1,11 +1,11 @@
 #pragma once
 
-#include "stdint.h"
+#include <cstdint>
 
 namespace aico
 {
-    enum class opres : uint32_t
+    enum class opres : uint8_t
     {
-        SUCCESS, FAILURE, CONTEXT_CURRENT
+        SUCCESS, FAILURE, OOM, CONTEXT_CURRENT
     };
 }
