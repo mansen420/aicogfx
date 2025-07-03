@@ -3,7 +3,7 @@
 #include <cassert>
 #include <type_traits>
 
-#include "vector.h"
+#include "storage.h"
 
 struct Hammer {
     std::string name;
