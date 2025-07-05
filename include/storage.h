@@ -212,6 +212,7 @@ public:
         requires(dim==DYNAMIC&&!std::is_default_constructible_v<T>)
     {
         _initcpct(dynamic_size, true);
+        if constexpr(Alivebit_Cond) _voidallbits();
     }
     //default construction
     explicit storage(size_t dynamic_size=0)
@@ -250,7 +251,7 @@ public:
     //initialized *must be* set to false.
     //`dynamic_size` must be >= 0, and data must point to at least Mincpct objects
     explicit storage(T* data, size_t dynamic_size, bool initialized=true)
-        noexcept requires(dim==DYNAMIC)
+        noexcept(!Alivebit_Cond) requires(dim==DYNAMIC)
     {
         assert(data!=nullptr);
         this->_data=data;
@@ -262,7 +263,7 @@ public:
             _alivebits=nullptr;
         else
         {
-            _alivebits=alloc(_n_bytes(_capacity));
+            _alivebits=(uint8_t*)alloc(_n_bytes(_capacity));
             if(_alivebits==nullptr)
             {
                 _destroy(begin(), end());
@@ -345,11 +346,16 @@ public:
                     (--end)->~T();
                 return;
             }
-            const size_t byte_offset=end-_data; /*one past the end*/
-            size_t idx=byte_offset/sizeof(T);
-            while(--end!=begin)
-                if(_alive(--idx))
+            size_t idx=end-_data;//T* arithmetic, one past the end
+            while(end!=begin)
+            {
+                --end; --idx;
+                if(_alive(idx))
+                {
                     end->~T();
+                    _unsetbit(idx);
+                }
+            }
         }
 
     }
@@ -414,16 +420,17 @@ public:
             throw;
         }
             
-        _destroy(this->begin(), this->end());
-        
         if(_alivebits)
-        {
-            memcpy(newaddr+newcpct, _alivebits, 
+            //copy liveness metadata
+            memcpy((void*)(newaddr+newcpct), _alivebits, 
                 _n_bytes(_capacity));
-            _alivebits=(uint8_t*)(newaddr+newcpct);
-        }
+
+        //this writes to _alivebits, so make sure to only call this
+        //after properly copying the old array
+        _destroy(this->begin(), this->end());
 
         free(_data);
+        _alivebits=(uint8_t*)(newaddr+newcpct);
         _data=newaddr;
         _capacity=newcpct;
 
@@ -433,14 +440,15 @@ public:
         /*RESIZE*/
         
     inline opres _resize_noinit(size_t newsize)
-    noexcept(noexcept(rsvcpct(std::declval<size_t>())))
+    noexcept(noexcept(rsvcpct(std::declval<size_t>()))&&
+        std::is_nothrow_destructible_v<T>)
     requires(dim==DYNAMIC)
     {
         if(newsize==this->size())   //noop
             return opres::SUCCESS;
         if(newsize<this->size())    //shrink
         {
-            _destroy(this->begin() + newsize, this->end());
+            _destroy(begin()+newsize, end());
             this->_dynmsz=newsize;
             return opres::SUCCESS;
         }
@@ -687,7 +695,16 @@ public:
 
         return opres::SUCCESS;
     }
-
+    
+    template<typename...Args>
+    void inline construct_at(size_t idx, Args&&...args) 
+        noexcept(std::is_nothrow_constructible_v<T, Args...>)
+        requires(requires{T(std::declval<Args>()...);})
+    {
+        assert(idx<size() && !_alive(idx));
+        new (_data+idx) T(std::forward<Args>(args)...);
+        _setbit(idx);
+    }
 
     /*DESTRUCTOR*/
     

@@ -41,7 +41,7 @@ int main() {
     std::cout << "--- Resize to 4 ---\n";
     s.resize(4);
     for (size_t i = 0; i < 4; ++i)
-        new (s.begin() + i) Hammer("h" + std::to_string(i));
+        s.construct_at(i, "h" + std::to_string(i));
     assert(Hammer::live_count == 4);
 
     std::cout << "--- Resize to 2 (shrink) ---\n";
@@ -51,7 +51,7 @@ int main() {
     std::cout << "--- Resize to 6 (grow) ---\n";
     s.resize(6);
     for (size_t i = 2; i < 6; ++i)
-        new (s.begin() + i) Hammer("h" + std::to_string(i));
+        s.construct_at(i, "h" + std::to_string(i));
     assert(Hammer::live_count == 6);
 
     std::cout << "--- Reserve for 20 ---\n";
@@ -60,6 +60,7 @@ int main() {
 
     std::cout << "--- Resize to 0 (should destroy all) ---\n";
     s.resize(0);
+    std::cout << Hammer::live_count << std::endl;
     assert(Hammer::live_count == 0);
 
     std::cout << "--- Reserve 0 (should be no-op due to Mincpct) ---\n";
@@ -69,7 +70,7 @@ int main() {
     std::cout << "--- Resize and fill again ---\n";
     s.resize(3);
     for (size_t i = 0; i < 3; ++i)
-        new (s.begin() + i) Hammer("re" + std::to_string(i));
+        s.construct_at(i, "re" + std::to_string(i));
     assert(Hammer::live_count == 3);
 
     std::cout << "--- Final cleanup ---\n";
