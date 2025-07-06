@@ -233,7 +233,8 @@ public:
     //custom construction
     template<typename...Args>
     explicit storage(size_t dynamic_size, Args&&...args)
-        requires(dim==DYNAMIC&&requires{T(std::declval<Args>()...);})
+        requires(dim==DYNAMIC&&requires{T(std::declval<Args>()...);}&&
+            !std::is_same_v<T, Args...>)
     {
         _initcpct(dynamic_size, false);
         for(size_t i=0; i<dynamic_size; ++i) //potentially slow
@@ -270,7 +271,7 @@ public:
                 free(_data);
                 throw std::bad_alloc();
             }
-            _voidallbits();
+            if constexpr(Alivebit_Cond) _voidallbits();
         }
     }
     //partially initialized data
@@ -478,14 +479,16 @@ public:
         auto res=this->_resize_noinit(newsize);
 
         //init new bits to false
-        if(Alivebit_Cond&&_alivebits)
-            for(size_t i=oldsize; i<newsize; ++i) _unsetbit(i);
+        if constexpr (Alivebit_Cond)
+            if(_alivebits) 
+                for(size_t i=oldsize; i<newsize; ++i) _unsetbit(i);
         if(newsize>oldsize&&res==opres::SUCCESS)
         {
             std::uninitialized_default_construct_n(_data+oldsize, 
                 newsize-oldsize);
-            if(Alivebit_Cond&&_alivebits)
-                for(size_t i=oldsize; i<newsize; ++i) _setbit(i);
+            if constexpr (Alivebit_Cond)
+                if(_alivebits)
+                    for(size_t i=oldsize; i<newsize; ++i) _setbit(i);
         }
         return res;
     }

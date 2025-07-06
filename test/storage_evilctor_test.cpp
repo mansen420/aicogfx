@@ -65,7 +65,8 @@ int main() {
 
     try {
         std::cout << "\n--- ThrowMove Test ---\n";
-        storage<ThrowMove> b(3, ThrowMove());
+        storage<ThrowMove> b(3);
+        auto a = b.move();
     } catch (...) {
         std::cout << "Caught ThrowMove exception as expected.\n";
     }
