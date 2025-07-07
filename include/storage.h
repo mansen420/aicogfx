@@ -705,8 +705,9 @@ public:
         requires(requires{T(std::declval<Args>()...);})
     {
         assert(idx<size() && !_alive(idx));
+        if constexpr(Alivebit_Cond) if(_alivebits) return;
         new (_data+idx) T(std::forward<Args>(args)...);
-        _setbit(idx);
+        if constexpr(Alivebit_Cond) _setbit(idx);
     }
 
     /*DESTRUCTOR*/
