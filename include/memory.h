@@ -34,8 +34,8 @@ namespace aico::sys
     }
 
     template<typename T, typename... Args>
-    inline T* ctalloc(size_t count=1);
-
+        requires(requires{T(std::declval<Args>()...);})
+    inline T* alloctr (size_t count=1, Args&&...args);
     template<typename  T>
     inline void dtrfree(T* addr);
 }

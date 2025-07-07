@@ -6,6 +6,6 @@ namespace aico
 {
     enum class opres : uint8_t
     {
-        SUCCESS, FAILURE, MEM_ERR, BOUNDS_ERR, CONTEXT_CURRENT
+        SUCCESS, FAILURE, MEM_ERR, BOUNDS_ERR, ALIGN_ERR, CONTEXT_CURRENT
     };
 }
