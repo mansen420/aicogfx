@@ -705,7 +705,7 @@ public:
         requires(requires{T(std::declval<Args>()...);})
     {
         assert(idx<size() && !_alive(idx));
-        if constexpr(Alivebit_Cond) if(_alivebits) return;
+        if constexpr(Alivebit_Cond) if(_alive(idx)) return;
         new (_data+idx) T(std::forward<Args>(args)...);
         if constexpr(Alivebit_Cond) _setbit(idx);
     }
