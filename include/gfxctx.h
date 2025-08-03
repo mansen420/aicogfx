@@ -8,7 +8,6 @@
 #include <ostream>
 #include <vector>
 #include <optional>
-#include <string>
 
 namespace aico
 {
