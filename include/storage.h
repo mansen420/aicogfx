@@ -297,7 +297,7 @@ public:
     }
 
     //noop land. this should shut up the compiler
-    storage()noexcept requires(dim!=DYNAMIC){}
+    storage()noexcept requires(dim!=DYNAMIC)=default;
 
         /*COPY*/
 
