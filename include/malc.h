@@ -47,7 +47,7 @@ namespace aico::sys
     {
         POWER, LINEAR, CONSTANT 
     };
-    alloc_strat g_strat=alloc_strat::POWER;
+    inline alloc_strat g_strat=alloc_strat::POWER;
     
     //assumes enough space after base
     inline void* align_up(void* base, size_t align)
@@ -188,7 +188,7 @@ namespace aico::sys
             return nullptr;
         }
         size_t next_size=g_heapsz==0?/*default init*/2*MB:
-            grow(g_heaps[g_heapsz].bytes);
+            grow(g_heaps[g_heapsz-1].bytes);
         while(bytes>=next_size/3)//heuristic, measure later
             next_size=grow(next_size);
         heap_t* h=alloc_heap(next_size);
