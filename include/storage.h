@@ -1,5 +1,6 @@
 #pragma once
 
+#include "malc.h"
 #include "memory.h"
 #include "opres.h"
 
@@ -22,14 +23,12 @@ inline constexpr size_t DYNAMIC = 0;
 typedef void*(*memalloc_t)(size_t);
 typedef void(*memfree_t)(void*);
 
-void* alloc_bind(size_t sz){return sys::memalloc(sz);}
+void* alloc_bind(size_t sz){return sys::malc(sz);}
 
 template <typename T, size_t dim=DYNAMIC, bool inlined=(dim!=DYNAMIC), 
-    size_t Mincpct=8,
-        memalloc_t alloc=&alloc_bind, 
-            memfree_t free=&sys::memfree>
-    requires (!(inlined && dim == DYNAMIC)&&Mincpct>0)
-       class storage
+    size_t Mincpct=8, memalloc_t alloc=&alloc_bind, memfree_t free=&sys::rel>
+requires (!(inlined && dim == DYNAMIC)&&Mincpct>0)
+class storage
 {
 public: //XXX testing
     struct nothing_t
