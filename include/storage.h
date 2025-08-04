@@ -709,6 +709,13 @@ public:
         if constexpr(Alivebit_Cond) _setbit(idx);
     }
 
+    opres inline push_back(const T& obj)
+    noexcept(noexcept(resize(std::declval<size_t>(), std::declval<const T&>())))
+    requires(requires{resize(std::declval<size_t>(), std::declval<const T&>());})
+    {
+        return resize(size()+1, obj);
+    }
+
     /*DESTRUCTOR*/
     
     ~storage()
