@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opres.h"
+#include "debug.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -81,7 +82,13 @@ namespace aico::sys
     //TODO most naive part of the alloctor
     void* heap_fit(heap_t& h, size_t maxbytes)
     {
-        freenode_t* node=h.freelist;
+        //TODO consider the case where we allocate X bytes at
+        //Y alignment, then free the first allocation and make the
+        //same request again. note how that second request might never
+        //use the first allocation's space, due to the pessimistic nature
+        //of maxbytes. consider "simulating" an allocation within a certain
+        //wiggle room, (say, [userbytes, userbytes+worst_overhead])
+            freenode_t* node=h.freelist;
         freenode_t* prev=nullptr;
         while(node)
         {
@@ -145,6 +152,7 @@ namespace aico::sys
                 *res=opres::ALIGN_ERR;
             return nullptr;
         }
+        if(bytes<sizeof(freenode_t)) bytes=sizeof(freenode_t);
         //worst case, user pointer can end up in
         //base+(sizeof(hdr)+alignof(hdr-1))+(alignment-1), +1 makes sure this case 
         //lands at a valid address
@@ -205,4 +213,25 @@ namespace aico::sys
         if(res) *res=opres::SUCCESS;
         return usr_aligned;
     }
+    //TODO does every allocation reserve enough to leave room for freenode_t on free?
+    void rel(void* usraddr)noexcept
+    {
+        hdr_t* hdr=gethdr(usraddr);
+        if(!hdr) return; //invalid address, can't do shit
+        if(hdr->flags&hdr_t::DEDICATED)
+        {
+            free(hdr->base);
+            return;
+        }
+        auto& heap=g_heaps[hdr->heapid];
+
+        freenode_t* node=(freenode_t*)usraddr;
+        node->next=heap.freelist;
+        heap.freelist=node;
+    }
 }
+
+
+
+
+
