@@ -29,7 +29,7 @@ int main() {
         assert(Tracker::alive == 8);
 
         // Overwrite elements 1-3 in dst with values from src[0-2]
-        auto result = src.copy(3, dst, 1, 0, false);
+        auto result = src.copyinto(dst, 3, 1, 0, false);
         assert(result == opres::SUCCESS);
         assert(dst[1].value == 10);
         assert(dst[2].value == 10);
@@ -51,7 +51,7 @@ int main() {
         Tracker* rawdst = (Tracker*)malloc(sizeof(Tracker) * 3);
         storage<Tracker, DYNAMIC, false, 8, &malloc, &free> 
             dst(rawdst, 3);
-        opres res = src.copy(3, dst, 0,
+        opres res = src.copyinto(dst, 3, 0,
                 0, true);
 
         assert(res == opres::SUCCESS);
