@@ -481,7 +481,7 @@ public:
         if(newcpct<=this->_capacity)   //noalloc
             return opres::SUCCESS;
         
-        const size_t extra=_alivebits?_n_bytes(newcpct):0;
+        const size_t extra=Alivebit_Cond&&_alivebits?_n_bytes(newcpct):0;
         T* newaddr=(T*)Alloc(sizeof(T)*newcpct+extra);
         if(!newaddr) //Alloc fault
             return opres::MEM_ERR;
@@ -526,7 +526,7 @@ public:
             throw;
         }
             
-        if(_alivebits)
+        if constexpr(Alivebit_Cond)if(_alivebits)
             //copy liveness metadata
             memcpy((void*)(newaddr+newcpct), _alivebits, 
                 _n_bytes(_capacity));
@@ -539,7 +539,7 @@ public:
             if((void*)_alivebits!=(void*)(_data+_capacity))/*separately allocated*/
                 Free(_alivebits);
         Free(_data);
-        _alivebits=(uint8_t*)(newaddr+newcpct);
+        _alivebits=Alivebit_Cond&&_alivebits?(uint8_t*)(newaddr+newcpct):nullptr;
         _data=newaddr;
         _capacity=newcpct;
 
