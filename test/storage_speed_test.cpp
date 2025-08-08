@@ -155,7 +155,7 @@ static void bench_storage(std::size_t N, std::mt19937_64& rng)
     using aico::micro_timer;
     
     // assumes default-constructible container itself
-    aico::storage<T> s;
+    aico::storage<T, aico::DYNAMIC, false, 8, malloc, free> s;
     s.rsvcpct(N);
 
     micro_timer tm;

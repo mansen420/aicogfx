@@ -13,6 +13,7 @@
 
 using namespace aico;
 
+//TODO XXX replacing these with malc/rel causes SIGSEGV
 // ---------- bind Alloc/Free to malloc/free ----------
 static void* Malloc(size_t n) { return std::malloc(n); }
 static void  Free(void* p)    { std::free(p); }
