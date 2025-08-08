@@ -287,7 +287,7 @@ public:
     {
         const size_t allocsz=std::max(Mincpct, logical_size);
         _data=(T*)Alloc(allocsz*sizeof(T)+
-            (trackbits?_n_bytes(allocsz):0));
+            (Alivebit_Cond&&trackbits?_n_bytes(allocsz):0));
         if(!_data)
             throw std::bad_alloc();
         _dynmsz=logical_size;
@@ -299,7 +299,7 @@ public:
         requires(dim==DYNAMIC&&!std::is_default_constructible_v<T>)
     {
         _initcpct(dynamic_size, true);
-        if constexpr(Alivebit_Cond) _voidallbits();
+        if constexpr(Alivebit_Cond)if(_alivebits) _voidallbits();
     }
     //default construction
     explicit storage(size_t dynamic_size=0)
@@ -487,7 +487,7 @@ public:
             return opres::MEM_ERR;
         
         const bool maybe_uninitialized=(Alivebit_Cond&&_alivebits);
-        if constexpr (std::is_trivially_copyable_v<T>) //happy path
+        if constexpr (!Alivebit_Cond&&std::is_trivially_copyable_v<T>) //happy path
             memcpy(newaddr, _data, size()*sizeof(T));
         else if(size_t constructed=0; maybe_uninitialized) try//slow, branching
             {
@@ -868,8 +868,8 @@ public:
         noexcept(std::is_nothrow_constructible_v<T, Args...>)
         requires(requires{T(std::declval<Args>()...);})
     {
-        assert(idx<size() && !_alive(idx));
-        if constexpr(Alivebit_Cond) if(_alive(idx)) return;
+        assert(idx<size()&&!_alive(idx));
+        if constexpr(Alivebit_Cond)if(_alive(idx)) return;
         new (_data+idx) T(std::forward<Args>(args)...);
         if constexpr(Alivebit_Cond) _setbit(idx);
     }
