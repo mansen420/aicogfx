@@ -18,7 +18,7 @@
 namespace aico
 {
 
-    void copy_bits(const uint8_t* src_bits,
+    inline void copy_bits(const uint8_t* src_bits,
                    size_t from_bitidx,
                    size_t n_bits,
                    uint8_t* dst_bits)
@@ -111,7 +111,7 @@ typedef void(*memfree_t)(void*);
 inline void* alloc_bind(size_t sz){return sys::malc(sz);}
 
 template <typename T, size_t dim=DYNAMIC, bool inlined=(dim!=DYNAMIC), 
-    size_t Mincpct=8, memalloc_t alloc=&alloc_bind, memfree_t free=&sys::rel>
+    size_t Mincpct=8, memalloc_t Alloc=&alloc_bind, memfree_t Free=&sys::rel>
 requires (!(inlined && dim == DYNAMIC)&&Mincpct>0)
 class storage
 {
@@ -286,7 +286,7 @@ public:
     void _initcpct(size_t logical_size, bool trackbits)
     {
         const size_t allocsz=std::max(Mincpct, logical_size);
-        _data=(T*)alloc(allocsz*sizeof(T)+
+        _data=(T*)Alloc(allocsz*sizeof(T)+
             (trackbits?_n_bytes(allocsz):0));
         if(!_data)
             throw std::bad_alloc();
@@ -307,7 +307,7 @@ public:
     {
         _initcpct(dynamic_size, false);
         try{std::uninitialized_default_construct_n(_data, _dynmsz);}
-        catch(...){free(_data); throw;}
+        catch(...){Free(_data); throw;}
     }
     //copy construction
     explicit storage(size_t dynamic_size, const T& fillval)
@@ -315,7 +315,7 @@ public:
     {
         _initcpct(dynamic_size, false);
         try{std::uninitialized_fill_n(this->begin(), this->size(), fillval);}
-        catch(...){free(_data); throw;}
+        catch(...){Free(_data); throw;}
     }
     //custom construction
     template<typename...Args>
@@ -329,7 +329,7 @@ public:
             catch(...)
             {
                 _destroy(_data, _data+i); 
-                free(_data);
+                Free(_data);
                 throw;
             }
     }
@@ -352,11 +352,11 @@ public:
             _alivebits=nullptr;
         else
         {
-            _alivebits=(uint8_t*)alloc(_n_bytes(_capacity));
+            _alivebits=(uint8_t*)Alloc(_n_bytes(_capacity));
             if(_alivebits==nullptr)
             {
                 //memory is still raw, no need to destruct anything
-                free(_data);
+                Free(_data);
                 throw std::bad_alloc();
             }
             if constexpr(Alivebit_Cond) _voidallbits();
@@ -381,8 +381,8 @@ public:
         this->_capacity=std::max(Mincpct, dynamic_size);
         if constexpr(!Alivebit_Cond)
             return;
-        _alivebits=(uint8_t*)alloc(_n_bytes(_capacity));
-        if(_alivebits==nullptr)//bad alloc, burn _data, we own it!
+        _alivebits=(uint8_t*)Alloc(_n_bytes(_capacity));
+        if(_alivebits==nullptr)//bad Alloc, burn _data, we own it!
         {
             //destroy live elements
             if constexpr(!std::is_trivially_destructible_v<T>)
@@ -392,8 +392,8 @@ public:
                         if(bits[(bit_offset+i)/8]&(1u<<((bit_offset+i)%8)))
                             (data+i)->~T();
                     }
-                    catch(...){free(_data); throw;}
-            free(_data);
+                    catch(...){Free(_data); throw;}
+            Free(_data);
             throw std::bad_alloc();
         }
         memset(_alivebits, 0x00, _n_bytes(_capacity));
@@ -482,8 +482,8 @@ public:
             return opres::SUCCESS;
         
         const size_t extra=_alivebits?_n_bytes(newcpct):0;
-        T* newaddr=(T*)alloc(sizeof(T)*newcpct+extra);
-        if(!newaddr) //alloc fault
+        T* newaddr=(T*)Alloc(sizeof(T)*newcpct+extra);
+        if(!newaddr) //Alloc fault
             return opres::MEM_ERR;
         
         const bool maybe_uninitialized=(Alivebit_Cond&&_alivebits);
@@ -510,7 +510,7 @@ public:
         {
             for(size_t i=constructed; i!=0; --i)
                 (newaddr+i-1)->~T();
-            free(newaddr);
+            Free(newaddr);
             throw;
         }
         else try /*this->_data is fully constructed*/ 
@@ -522,7 +522,7 @@ public:
         }
         catch(...)
         {
-            free(newaddr);
+            Free(newaddr);
             throw;
         }
             
@@ -534,8 +534,11 @@ public:
         //this writes to _alivebits, so make sure to only call this
         //after properly copying the old array
         _destroy(this->begin(), this->end());
-
-        free(_data);
+        
+        if constexpr(Alivebit_Cond)if(_alivebits)
+            if((void*)_alivebits!=(void*)(_data+_capacity))/*separately allocated*/
+                Free(_alivebits);
+        Free(_data);
         _alivebits=(uint8_t*)(newaddr+newcpct);
         _data=newaddr;
         _capacity=newcpct;
@@ -632,7 +635,7 @@ public:
 
     template<typename U=T, 
         size_t OthrMincpt=Mincpct, 
-        memalloc_t OthrAlloc=alloc, memfree_t OthrFree=free>
+        memalloc_t OthrAlloc=Alloc, memfree_t OthrFree=Free>
     inline storage<U, DYNAMIC, false, OthrMincpt, OthrAlloc, OthrFree>
     copy(size_t n_elements, size_t fromidx=0, opres*res=nullptr)const  
         noexcept(std::is_nothrow_constructible_v<U, const T&>)
@@ -668,17 +671,21 @@ public:
                     try
                     {
                         //we subtract fromidx so that destination starts at 0
-                        std::construct_at(resdata[i-fromidx],
+                        std::construct_at(&resdata[i-fromidx],
                             this->at(i));
                     }
                     catch(...)//destroy every live object in reverse order
                     {
-                        for(U* end=resdata+(i-fromidx); end!=resdata;)
-                            (--end)->~U();
+                        if constexpr(!std::is_trivially_destructible_v<U>)
+                            for(size_t j=i-fromidx; j-->0;)//j=num ctd elems
+                                try
+                                {
+                                    if(_alive(fromidx+j)) (resdata+j)->~U();
+                                }
+                                catch(...){OthrFree(resdata); throw;}
                         OthrFree(resdata);
                         throw;
                     }
-            //we can set bits manually
             ret_t result((U*)resdata, (size_t)n_elements, _alivebits, fromidx);
             if(res) *res=opres::SUCCESS;
             return result;
@@ -702,9 +709,9 @@ public:
 
     template<typename U=T, 
         size_t OthrMincpt=Mincpct, 
-        memalloc_t OthrAlloc=alloc, memfree_t OthrFree=free>
+        memalloc_t OthrAlloc=Alloc, memfree_t OthrFree=Free>
     inline storage<U, DYNAMIC, false, OthrMincpt, OthrAlloc, OthrFree>
-    copy()const  
+    copy()const
         noexcept(std::is_nothrow_constructible_v<U, const T&>)
         requires(dim==DYNAMIC&&requires{U(std::declval<const T&>());})
     {
@@ -745,7 +752,7 @@ public:
     //(constructed) by this function 
     template<typename U=T, 
         size_t OthrMincpt=Mincpct, 
-        memalloc_t OthrAlloc=alloc, memfree_t OthrFree=free>
+        memalloc_t OthrAlloc=Alloc, memfree_t OthrFree=Free>
     inline opres copyinto(
             storage<U, DYNAMIC, false, OthrMincpt, OthrAlloc, OthrFree>&dst,
             size_t n_elements,
@@ -778,7 +785,7 @@ public:
     
     template<typename U=T, 
         size_t OthrMincpt=Mincpct, 
-        memalloc_t OthrAlloc=alloc, memfree_t OthrFree=free>
+        memalloc_t OthrAlloc=Alloc, memfree_t OthrFree=Free>
     inline storage<U, DYNAMIC, false, OthrMincpt, OthrAlloc, OthrFree>
     move(size_t n_elements, size_t fromidx=0, opres*res=nullptr)
         noexcept(std::is_nothrow_constructible_v<U, T&&>)
@@ -806,7 +813,7 @@ public:
 
     template<typename U=T,
         size_t OthrMincpt=Mincpct, 
-        memalloc_t OthrAlloc=alloc, memfree_t OthrFree=free>
+        memalloc_t OthrAlloc=Alloc, memfree_t OthrFree=Free>
     inline storage<U, DYNAMIC, false, OthrMincpt, OthrAlloc, OthrFree>
     move()
         noexcept(std::is_nothrow_constructible_v<U, T&&>)
@@ -819,7 +826,7 @@ public:
     //(constructed) by this function
     template<typename U=T, 
         size_t OthrMincpt=Mincpct, 
-        memalloc_t OthrAlloc=alloc, memfree_t OthrFree=free>
+        memalloc_t OthrAlloc=Alloc, memfree_t OthrFree=Free>
     inline opres move(
                 size_t n_elements,
                 storage<U, DYNAMIC, false, OthrMincpt, OthrAlloc, OthrFree>&dst,
@@ -871,9 +878,15 @@ public:
     noexcept(noexcept(resize(std::declval<size_t>(), std::declval<const T&>())))
     requires(requires{resize(std::declval<size_t>(), std::declval<const T&>());})
     {
-        return resize(size()+1, obj);
+        return resize(size()+1, std::forward<const T&>(obj));
     }
-
+    
+    opres inline push_back(T&& obj)
+    noexcept(noexcept(resize(std::declval<size_t>(), std::declval<T&&>())))
+    requires(requires{resize(std::declval<size_t>(), std::declval<T&&>());})
+    {
+        return resize(size()+1, std::forward<T&&>(obj));
+    }
     /*DESTRUCTOR*/
     
     ~storage()
@@ -885,8 +898,8 @@ public:
         _destroy(this->begin(), this->end());
         if constexpr(Alivebit_Cond)if(_alivebits)
             if((void*)_alivebits!=(void*)(_data+_capacity))/*separately allocated*/
-                free(_alivebits);
-        free(this->_data);
+                Free(_alivebits);
+        Free(this->_data);
     }
     ~storage()noexcept requires(dim!=DYNAMIC)=default;
 };
