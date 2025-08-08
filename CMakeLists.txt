@@ -15,6 +15,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # For executables
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# XXX testing
+add_compile_options(-save-temps -fno-inline)
+
 # Handle multi-config generators (Debug/Release)
 foreach(OUTPUTCONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG_UPPER)

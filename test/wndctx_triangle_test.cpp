@@ -1,7 +1,7 @@
-#include "engctx.h"
-#include "wndctx.h"
-#include "gfxctx.h"
-#include "renderers.h"
+#include "aico/engctx.h"
+#include "aico/wndctx.h"
+#include "aico/gfxctx.h"
+#include "aico/renderers.h"
 
 int main()
 {

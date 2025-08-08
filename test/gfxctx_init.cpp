@@ -1,8 +1,8 @@
-#include "engctx.h"
-#include "opres.h"
-#include "wndctx.h"
-#include "gfxctx.h"
-#include "renderers.h"
+#include "aico/engctx.h"
+#include "aico/opres.h"
+#include "aico/wndctx.h"
+#include "aico/gfxctx.h"
+#include "aico/renderers.h"
 #include <cstdlib>
 #include <iostream>
 

@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <cassert>
 
-#include "storage.h"
+#include "aico/storage.h"
 
 using namespace::aico;
 

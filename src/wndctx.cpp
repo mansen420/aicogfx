@@ -1,6 +1,6 @@
-#include "opres.h"
-#include "wndctx.h"
-#include "gfxctx.h"
+#include "aico/opres.h"
+#include "aico/wndctx.h"
+#include "aico/gfxctx.h"
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"

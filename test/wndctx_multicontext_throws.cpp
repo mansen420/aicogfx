@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <thread>
 #include <unistd.h>
-#include "wndctx.h"
-#include "engctx.h"
-#include "opres.h"
-#include "renderers.h"
+#include "aico/wndctx.h"
+#include "aico/engctx.h"
+#include "aico/opres.h"
+#include "aico/renderers.h"
 
 int main()
 {

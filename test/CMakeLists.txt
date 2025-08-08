@@ -14,10 +14,15 @@ foreach(TEST_FILE ${TEST_SRC})
     # Create a test executable
     add_executable(${TEST_NAME} ${TEST_FILE} ${TEST_INCLUDES})
 
+    # Add compile flags
+    if(!MSVC)
+        add_compile_options(${TEST_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+
     # Link to your engine library
     target_link_libraries(${TEST_NAME} PRIVATE aicogfx)
 
-    # Set output directory
+   # Set output directory
     set_target_properties(${TEST_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests
     )

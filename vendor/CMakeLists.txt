@@ -4,4 +4,4 @@ set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(glm)
 add_subdirectory(glfw)
 add_subdirectory(glad)
-
+add_subdirectory(tinyobjloader)

@@ -1,9 +1,9 @@
-#include "gfxctx.h"
+#include "aico/gfxctx.h"
 #include "_gfxctx.h"
 
 #include "glad/glad.h"
-#include "opres.h"
-#include "wndctx.h"
+#include "aico/opres.h"
+#include "aico/wndctx.h"
 
 #include <cassert>
 #include <sstream>

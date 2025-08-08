@@ -1,7 +1,7 @@
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
-#include "storage.h" 
+#include "aico/storage.h" 
 
 using namespace aico;
 

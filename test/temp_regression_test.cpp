@@ -1,6 +1,6 @@
-#include "wndctx.h"
-#include "renderers.h"
-#include "engctx.h"
+#include "aico/wndctx.h"
+#include "aico/renderers.h"
+#include "aico/engctx.h"
 
 int main()
 {
