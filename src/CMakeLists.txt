@@ -2,8 +2,6 @@
 file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-    "${CMAKE_SOURCE_DIR}/include/*.h"
 )
 
 set(BIN_NAME aicogfx)
@@ -26,12 +24,12 @@ target_include_directories(${BIN_NAME}
     PUBLIC
         ${CMAKE_SOURCE_DIR}/include
     PRIVATE
-        ${CMAKE_SOURCE_DIR}/vendor/glm
-        ${CMAKE_SOURCE_DIR}/vendor/glfw/include
         ${CMAKE_CURRENT_SOURCE_DIR}  # for internal headers
-        ${CMAKE_CURRENT_SOURCE_DIR}/glad/include
 )
 
+target_compile_definitions(${BIN_NAME} PRIVATE 
+    $<$<CONFIG:Debug>:AICO_DEBUG=1>
+)
 # Link dependencies
 find_package(OpenGL REQUIRED)
 target_link_libraries(${BIN_NAME} PRIVATE glad glm::glm OpenGL::GL glfw tinyobjloader)
