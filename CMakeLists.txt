@@ -1,7 +1,24 @@
-cmake_minimum_required(VERSION 3.16)
-project(AiCoGFX LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.24)
 
-option(BUILD_TESTS "Build test suite" ON)
+# default on
+option(CMAKE_EXPORT_COMPILE_COMMANDS "Export compile_commands.json" ON)
+
+project(aico LANGUAGES C CXX)
+
+option(AICO_BUILD_TESTS "Build test suite" ON)
+option(AICO_ENABLE_WARN "Build with compiler warnings" ON)
+
+if(AICO_BUILD_TESTS)
+    enable_testing()
+endif()
+# Enable warnings
+if(AICO_ENABLE_WARN)
+    if (MSVC)
+        add_compile_options(/W4)
+    else()
+        add_compile_options(-Wall -Wextra -Wpedantic)
+    endif()
+endif()
 
 # Set C++ standard globally
 set(CMAKE_CXX_STANDARD 20)
@@ -15,9 +32,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # For executables
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# XXX testing
-add_compile_options(-save-temps -fno-inline)
-
 # Handle multi-config generators (Debug/Release)
 foreach(OUTPUTCONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG_UPPER)
@@ -26,10 +40,9 @@ foreach(OUTPUTCONFIG IN LISTS CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG_UPPER} ${CMAKE_BINARY_DIR}/bin)
 endforeach()
 
-
-# Add subprojects
+add_subdirectory(common)
 add_subdirectory(vendor)
 add_subdirectory(src)
-if(BUILD_TESTS)
+if(AICO_BUILD_TESTS)
     add_subdirectory(test)
 endif()

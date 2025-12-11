@@ -9,7 +9,6 @@ namespace aico
         static_assert(std::chrono::treat_as_floating_point<typename D::rep>::value ||
                       std::is_integral_v<typename D::rep>,
                       "D must be a std::chrono::duration");
-
     public:
         using duration   = D;
         using clock      = Clock;
@@ -52,4 +51,3 @@ namespace aico
     using milli_timer = timer<std::chrono::milliseconds>;
 
 } // namespace aico
-

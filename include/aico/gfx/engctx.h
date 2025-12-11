@@ -1,0 +1,15 @@
+#pragma once
+#include <stdint.h>
+namespace aico
+{ 
+    struct engctx
+    {
+        engctx();
+        enum bits{INIT=1<<0, DEBUG=1<<1};
+        const uint32_t& flags;
+        ~engctx()noexcept;
+    private:
+        struct _impl;
+        _impl* implptr;
+    };
+};
